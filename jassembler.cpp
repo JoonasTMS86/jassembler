@@ -347,10 +347,17 @@ void nextLineOfIsaFile()
 {
 	sourceLineOffset = sourcePos;
 	isaPos = isaMnemonicPos;
-	while(isaFile[isaPos] != 10)
+	while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
 	{
 		isaPos++;
 		if(isaPos >= isaSize) break;
+	}
+	if((isaPos + 1) < isaSize)
+	{
+		if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10)
+		{
+			isaPos++;
+		}
 	}
 	isaPos++;
 	if(isaPos >= isaSize)
@@ -441,14 +448,17 @@ int main(int argc, char **argv)
 		instructionFound = false;
 		while(checkingSourceInstruction)
 		{
-			if(isaFile[isaMnemonicPos] == 10 || isaMnemonicPos >= isaSize)
+			if(isaFile[isaMnemonicPos] == 13 || isaFile[isaMnemonicPos] == 10 || isaMnemonicPos >= isaSize)
 			{
+				if((isaMnemonicPos + 1) < isaSize)
+				{
+					if(isaFile[isaMnemonicPos] == 13 && isaFile[isaMnemonicPos + 1] == 10)
+					{
+						isaMnemonicPos++;
+					}
+				}
 				isaMnemonicPos++;
 				checkingSourceInstruction = false;
-				if(isaMnemonicPos < isaSize)
-				{
-					isaMnemonicPos++;
-				}
 				// Instruction found! Now write the opcode & possible param(s) to the output file.
 				instructionFound = true;
 				char digit1 = isaFile[isaPos];
@@ -492,10 +502,14 @@ int main(int argc, char **argv)
 						allowedBitWidth = "8";
 						sourceLineOffset = sourcePos;
 						isaPos = isaMnemonicPos;
-						while(isaFile[isaPos] != 10)
+						while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
 						{
 							isaPos++;
 							if(isaPos >= isaSize) break;
+						}
+						if((isaPos + 1) < isaSize)
+						{
+							if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10) isaPos++;
 						}
 						isaPos++;
 						if(isaPos >= isaSize)
@@ -528,10 +542,14 @@ int main(int argc, char **argv)
 						allowedBitWidth = "16";
 						sourceLineOffset = sourcePos;
 						isaPos = isaMnemonicPos;
-						while(isaFile[isaPos] != 10)
+						while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
 						{
 							isaPos++;
 							if(isaPos >= isaSize) break;
+						}
+						if((isaPos + 1) < isaSize)
+						{
+							if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10) isaPos++;
 						}
 						isaPos++;
 						if(isaPos >= isaSize)
@@ -563,7 +581,11 @@ int main(int argc, char **argv)
 		}
 		if(cError != 0) break;
 		// Go to the next line of the source file.
-		while(loadedFile[sourcePos] != 10) sourcePos++;
+		while(loadedFile[sourcePos] != 13 && loadedFile[sourcePos] != 10) sourcePos++;
+		if((sourcePos + 1) < loadedSize)
+		{
+			if(loadedFile[sourcePos] == 13 && loadedFile[sourcePos + 1] == 10) sourcePos++;
+		}
 		sourcePos++;
 		currentLine++;
 	}
