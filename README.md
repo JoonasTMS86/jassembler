@@ -4,7 +4,7 @@ While there are plenty of existing Assemblers already, I created this program in
 
 My Assembler can actually assemble source into any machine code, with JISA being just one example.
 For example, it can assemble 8-bit code such as 6502, Z80, etc.
-All you have to do is provide JISA with a text file which contains the opcodes for the machine code that you wish to assemble your source code into.
+All you have to do is provide JAssembler with a text file which contains the opcodes for the machine code that you wish to assemble your source code into.
 
 I have included the file "Instruction Set.txt", which contains the opcodes and textual descriptions of the JISA architecture.
 I have also included the example source file, "example.asm", which you can assemble into JISA binary with JAssembler.
