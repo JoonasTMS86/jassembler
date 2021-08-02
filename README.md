@@ -10,6 +10,7 @@ I have included the file "Instruction Set", which contains the opcodes and textu
 I have also included the example source file, "example.asm", which you can assemble into JISA binary with JAssembler.
 
 For example: assemble "example.asm" into a file named "result" using "Instruction Set" (which contains the JISA ISA definitions):
+
 ./jassembler "Instruction Set" example.asm result
 
 JAssembler is a Work-In-Progress program. Variables, labels and other source code features are not available yet. I will implement them in future versions of JAssembler. My initial goal was to create a program with which I can assemble some JISA source into JISA binary programs, so that I can use them in my website - it is in my plans to make my own JISA Virtual Machine to my website which executes JISA code.
