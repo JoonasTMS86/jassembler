@@ -15,6 +15,6 @@ To assemble "example.asm" into a file named "result" using "Instruction Set.txt"
 
 <code>jassembler "Instruction Set.txt" example.asm result</code>
 
-JAssembler is a Work-In-Progress program. Variables, labels and other source code features are not available yet. I will implement them in future versions of JAssembler. My initial goal was to create a program with which I can assemble some JISA source into JISA binary programs, so that I can use them in my website - it is in my plans to make my own JISA Virtual Machine to my website which executes JISA code.
+JAssembler is a Work-In-Progress project. Variables, labels and other source code features are not available yet. I will implement them in future versions of JAssembler. My initial goal was to create a program with which I can assemble some JISA source into JISA binary programs, so that I can use them in my website - it is in my plans to make my own JISA Virtual Machine to my website which executes JISA code.
 
 2021 Joonas Lindberg, The Mad Scientist
