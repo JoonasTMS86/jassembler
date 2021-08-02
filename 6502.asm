@@ -1,0 +1,6 @@
+	LDA #$08
+	STA $0400
+	LDA #$09
+	STA $0401
+	INC $D020
+	JMP $080B

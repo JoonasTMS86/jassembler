@@ -1,0 +1,151 @@
+00                                                                            BRK
+01 !!                                                                         ORA (!!,X)
+05 !!                                                                         ORA !!
+06 !!                                                                         ASL !!
+08                                                                            PHP
+09 !!                                                                         ORA #!!
+0A                                                                            ASL
+0D ??                                                                         ORA ??
+0E ??                                                                         ASL ??
+10 !!                                                                         BPL @@
+11 !!                                                                         ORA (!!),Y
+15 !!                                                                         ORA !!,X
+16 !!                                                                         ASL !!,X
+18                                                                            CLC
+19 ??                                                                         ORA ??,Y
+1D ??                                                                         ORA ??,X
+1E ??                                                                         ASL ??,X
+20 ??                                                                         JSR ??
+21 !!                                                                         AND (!!,X)
+24 !!                                                                         BIT !!
+25 !!                                                                         AND !!
+26 !!                                                                         ROL !!
+28                                                                            PLP
+29 !!                                                                         AND #!!
+2A                                                                            ROL
+2C ??                                                                         BIT ??
+2D ??                                                                         AND ??
+2E ??                                                                         ROL ??
+30 !!                                                                         BMI @@
+31 !!                                                                         AND (!!),Y
+35 !!                                                                         AND !!,X
+36 !!                                                                         ROL !!,X
+38                                                                            SEC
+39 ??                                                                         AND ??,Y
+3D ??                                                                         AND ??,X
+3E ??                                                                         ROL ??,X
+40                                                                            RTI
+41 !!                                                                         EOR (!!,X)
+45 !!                                                                         EOR !!
+46 !!                                                                         LSR !!
+48                                                                            PHA
+49 !!                                                                         EOR #!!
+4A                                                                            LSR
+4C ??                                                                         JMP ??
+4D ??                                                                         EOR ??
+4E ??                                                                         LSR ??
+50 !!                                                                         BVC @@
+51 !!                                                                         EOR (!!),Y
+55 !!                                                                         EOR !!,X
+56 !!                                                                         LSR !!,X
+58                                                                            CLI
+59 ??                                                                         EOR ??,Y
+5D ??                                                                         EOR ??,X
+5E ??                                                                         LSR ??,X
+60                                                                            RTS
+61 !!                                                                         ADC (!!,X)
+65 !!                                                                         ADC !!
+66 !!                                                                         ROR !!
+68                                                                            PLA
+69 !!                                                                         ADC #!!
+6A                                                                            ROR
+6C ??                                                                         JMP (??)
+6D ??                                                                         ADC ??
+6E ??                                                                         ROR ??
+70 !!                                                                         BVS @@
+71 !!                                                                         ADC (!!),Y
+75 !!                                                                         ADC !!,X
+76 !!                                                                         ROR !!,X
+78                                                                            SEI
+79 ??                                                                         ADC ??,Y
+7D ??                                                                         ADC ??,X
+7E ??                                                                         ROR ??,X
+81 !!                                                                         STA (!!,X)
+84 !!                                                                         STY !!
+85 !!                                                                         STA !!
+86 !!                                                                         STX !!
+88                                                                            DEY
+8A                                                                            TXA
+8C ??                                                                         STY ??
+8D ??                                                                         STA ??
+8E ??                                                                         STX ??
+90 !!                                                                         BCC @@
+91 !!                                                                         STA (!!),Y
+94 !!                                                                         STY !!,X
+95 !!                                                                         STA !!,X
+96 !!                                                                         STX !!,Y
+98                                                                            TYA
+99 ??                                                                         STA ??,Y
+9A                                                                            TXS
+9D ??                                                                         STA ??,X
+A0 !!                                                                         LDY #!!
+A1 !!                                                                         LDA (!!,X)
+A2 !!                                                                         LDX #!!
+A4 !!                                                                         LDY !!
+A5 !!                                                                         LDA !!
+A6 !!                                                                         LDX !!
+A8                                                                            TAY
+A9 !!                                                                         LDA #!!
+AA                                                                            TAX
+AC ??                                                                         LDY ??
+AD ??                                                                         LDA ??
+AE ??                                                                         LDX ??
+B0 !!                                                                         BCS @@
+B1 !!                                                                         LDA (!!),Y
+B4 !!                                                                         LDY !!,X
+B5 !!                                                                         LDA !!,X
+B6 !!                                                                         LDX !!,Y
+B8                                                                            CLV
+B9 ??                                                                         LDA ??,Y
+BA                                                                            TSX
+BC ??                                                                         LDY ??,X
+BD ??                                                                         LDA ??,X
+BE ??                                                                         LDX ??,Y
+C0 !!                                                                         CPY #!!
+C1 !!                                                                         CMP (!!,X)
+C4 !!                                                                         CPY !!
+C5 !!                                                                         CMP !!
+C6 !!                                                                         DEC !!
+C8                                                                            INY
+C9 !!                                                                         CMP #!!
+CA                                                                            DEX
+CC ??                                                                         CPY ??
+CD ??                                                                         CMP ??
+CE ??                                                                         DEC ??
+D0 !!                                                                         BNE @@
+D1 !!                                                                         CMP (!!),Y
+D5 !!                                                                         CMP !!,X
+D6 !!                                                                         DEC !!,X
+D8                                                                            CLD
+D9 ??                                                                         CMP ??,Y
+DD ??                                                                         CMP ??,X
+DE ??                                                                         DEC ??,X
+E0 !!                                                                         CPX #!!
+E1 !!                                                                         SBC (!!,X)
+E4 !!                                                                         CPX !!
+E5 !!                                                                         SBC !!
+E6 !!                                                                         INC !!
+E8                                                                            INX
+E9 !!                                                                         SBC #!!
+EA                                                                            NOP
+EC ??                                                                         CPX ??
+ED ??                                                                         SBC ??
+EE ??                                                                         INC ??
+F0 !!                                                                         BEQ @@
+F1 !!                                                                         SBC (!!),Y
+F5 !!                                                                         SBC !!,X
+F6 !!                                                                         INC !!,X
+F8                                                                            SED
+F9 ??                                                                         SBC ??,Y
+FD ??                                                                         SBC ??,X
+FE ??                                                                         INC ??,X

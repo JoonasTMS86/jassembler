@@ -459,17 +459,34 @@ int main(int argc, char **argv)
 					}
 				}
 				isaMnemonicPos++;
-				checkingSourceInstruction = false;
-				// Instruction found! Now write the opcode & possible param(s) to the output file.
-				instructionFound = true;
-				char digit1 = isaFile[isaPos];
-				char digit2 = isaFile[isaPos + 1];
-				while(digit1 != 32)
+
+				// Instruction found?
+				int savedsourceLineOffset = sourceLineOffset;
+				while(loadedFile[sourceLineOffset] == 0 || loadedFile[sourceLineOffset] == 7 || loadedFile[sourceLineOffset] == 32)
 				{
-					writeByte(digit1, digit2);
-					isaPos += 3;
-					digit1 = isaFile[isaPos];
-					digit2 = isaFile[isaPos + 1];
+					sourceLineOffset++;
+				}
+				if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10)
+				{
+					// Instruction found! Now write the opcode & possible param(s) to the output file.
+					checkingSourceInstruction = false;
+					sourceLineOffset = savedsourceLineOffset;
+					instructionFound = true;
+					char digit1 = isaFile[isaPos];
+					char digit2 = isaFile[isaPos + 1];
+					while(digit1 != 32)
+					{
+						writeByte(digit1, digit2);
+						isaPos += 3;
+						digit1 = isaFile[isaPos];
+						digit2 = isaFile[isaPos + 1];
+					}
+				}
+				else
+				{
+					// Nope, must keep looking for a completely matching instruction.
+					sourceLineOffset = savedsourceLineOffset;
+					nextLineOfIsaFile();
 				}
 			}
 			else
