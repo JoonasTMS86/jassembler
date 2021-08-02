@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -396,9 +397,9 @@ int main(int argc, char **argv)
 		free (isaFile);
 		return 0;
 	}
-	string isaFileName = argv[1];
-	string sourceFileName = argv[2];
-	string targetFileName = argv[3];
+	char * isaFileName = argv[1];
+	char * sourceFileName = argv[2];
+	char * targetFileName = argv[3];
 	ifstream isafile(isaFileName, ios::in|ios::binary|ios::ate);
 	if(isafile)
 	{
