@@ -8,7 +8,7 @@ All you have to do is provide JAssembler with a text file which contains the opc
 
 I have included the file "Instruction Set.txt", which contains the opcodes and textual descriptions of the JISA architecture.
 I have also included the example source file, "example.asm", which you can assemble into JISA binary with JAssembler.
-Source files can be assembled by entering the name of the instruction set, source file and target filename in the command line.
+Source files can be assembled by entering the filename of the instruction set to be used, source file and target filename in the command line.
 
 For example:
 To assemble "example.asm" into a file named "result" using "Instruction Set.txt":
