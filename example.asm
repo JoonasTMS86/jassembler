@@ -1,0 +1,3 @@
+	LOA AX,#$FF0000
+	FLOA $0,AT
+	JMP 0
