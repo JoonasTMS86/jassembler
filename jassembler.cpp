@@ -459,14 +459,13 @@ int main(int argc, char **argv)
 					}
 				}
 				isaMnemonicPos++;
-
 				// Instruction found?
 				int savedsourceLineOffset = sourceLineOffset;
 				while(loadedFile[sourceLineOffset] == 0 || loadedFile[sourceLineOffset] == 7 || loadedFile[sourceLineOffset] == 32)
 				{
 					sourceLineOffset++;
 				}
-				if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10)
+				if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10 || loadedFile[sourceLineOffset] == ';')
 				{
 					// Instruction found! Now write the opcode & possible param(s) to the output file.
 					checkingSourceInstruction = false;
@@ -499,6 +498,11 @@ int main(int argc, char **argv)
 					sourceLineOffset++;
 					isaMnemonicPos++;
 					while(isaFile[isaMnemonicPos] == 32) isaMnemonicPos++;
+				}
+				// Comment? Then we ignore all characters except for line break.
+				else if(comparedChar == ';')
+				{
+					checkingSourceInstruction = false;
 				}
 				else if(isaFile[isaMnemonicPos] == '!')
 				{
