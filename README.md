@@ -1,5 +1,5 @@
 # jassembler
-JAssembler is my own Assembler for Windows and Linux which can assemble an Assembly source file into any microprocessor binary.
+JAssembler is my own Assembler which can assemble an Assembly source file into any microprocessor binary.
 While there are plenty of existing Assemblers already, I created this program in order to be able to assemble my own JISA (Joonas Instruction Set Architecture) Assembly code into JISA binary code.
 
 My Assembler can actually assemble source into any machine code, with JISA being just one example.
