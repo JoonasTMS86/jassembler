@@ -1,5 +1,9 @@
 #define errUNKNOWNINSTRUCTION 1
 #define errVALUEOUTOFRANGE 2
+#define errBRANCHOUTOFRANGE 3
+#define errSYNTAXERROR 4
+#define errENDOFFILE 5
+#define errVALUENOTDEFINED 6
 
 #include <iostream>
 #include <fstream>
@@ -11,10 +15,10 @@ char * loadedFile = (char*) malloc(1920138);
 char * isaFile = (char*) malloc(1920138);
 char * savedFile = (char*) malloc(1920138);
 unsigned int loadedSize = 0;
-unsigned int savedSize = 0;
+unsigned int savedSize;
 unsigned int isaSize = 0;
-int cError = 0; // Compiler error code
-int currentLine = 1; // Current line on the source file
+int cError; // Compiler error code
+int currentLine; // Current line on the source file
 int byte0, byte1, byte2, byte3, byte4, byte5, byte6, byte7;
 int valueStackPushPointer;
 int valueStackPopPointer;
@@ -28,8 +32,18 @@ int isaMnemonicPos;
 int sourcePos;
 int sourceLineOffset;
 bool instructionFound;
+int numericValue;
+int CPUAddress; // Current address of CPU. Its value can be changed with the ORG directive.
+string lineContent;
+int variablesSize = 0;
+string variableNames[1000000];
+int variableValues[1000000];
+string nameFoundAtLine;
+bool valueNotDefined;
+bool possibleError;
+int passes;
 
-int byteTable[160] = 
+const int byteTable[160] = 
 {
 0x8A,0xC7,0x23,0x04,0x89,0xE8,0x00,0x00,
 0x0D,0xE0,0xB6,0xB3,0xA7,0x64,0x00,0x00,
@@ -79,7 +93,7 @@ void pop()
 	valueStackPopPointer -= 8;
 }
 
-void writeByte(char digit1, char digit2)
+void writeDigitsAsByte(char digit1, char digit2)
 {
 	int value = 0;
 	// 8-bit value
@@ -88,6 +102,7 @@ void writeByte(char digit1, char digit2)
 		pop();
 		savedFile[savedSize] = byte0;
 		savedSize++;
+		CPUAddress++;
 	}
 	// 16-bit value
 	else if(digit1 == '?')
@@ -96,6 +111,7 @@ void writeByte(char digit1, char digit2)
 		savedFile[savedSize] = byte0;
 		savedFile[savedSize + 1] = byte1;
 		savedSize += 2;
+		CPUAddress += 2;
 	}
 	// 64-bit value
 	else if(digit1 == '"')
@@ -110,6 +126,7 @@ void writeByte(char digit1, char digit2)
 		savedFile[savedSize + 6] = byte6;
 		savedFile[savedSize + 7] = byte7;
 		savedSize += 8;
+		CPUAddress += 8;
 	}
 	else
 	{
@@ -119,7 +136,19 @@ void writeByte(char digit1, char digit2)
 		else value = value + (digit2 - 48);
 		savedFile[savedSize] = value;
 		savedSize++;
+		CPUAddress++;
 	}
+}
+
+void writeByte(int value)
+{
+	char digit1 = value >> 4;
+	char digit2 = value & 15;
+	if(digit1 < 10) digit1 += 0x30;
+	else digit1 += 0x37;
+	if(digit2 < 10) digit2 += 0x30;
+	else digit2 += 0x37;
+	writeDigitsAsByte(digit1, digit2);
 }
 
 void error(string msg)
@@ -133,6 +162,7 @@ void error(string msg)
 // Get the hexadecimal value in the source file.
 void toHex(int pos)
 {
+	byte0 = 0;
 	int currentDigit = 0;
 	bool checking = true;
 	while(checking)
@@ -212,7 +242,6 @@ void toDecimal(int pos)
 		while(multiplier > 0)
 		{
 			int carry;
-
 			byte0 = byte0 + byteTable[byteTablePos + 7];
 			if(byte0 >= 256)
 			{
@@ -233,7 +262,6 @@ void toDecimal(int pos)
 			{
 				carry = 0;
 			}
-
 			byte2 = byte2 + byteTable[byteTablePos + 5] + carry;
 			if(byte2 >= 256)
 			{
@@ -244,7 +272,6 @@ void toDecimal(int pos)
 			{
 				carry = 0;
 			}
-
 			byte3 = byte3 + byteTable[byteTablePos + 4] + carry;
 			if(byte3 >= 256)
 			{
@@ -255,7 +282,6 @@ void toDecimal(int pos)
 			{
 				carry = 0;
 			}
-
 			byte4 = byte4 + byteTable[byteTablePos + 3] + carry;
 			if(byte4 >= 256)
 			{
@@ -266,7 +292,6 @@ void toDecimal(int pos)
 			{
 				carry = 0;
 			}
-
 			byte5 = byte5 + byteTable[byteTablePos + 2] + carry;
 			if(byte5 >= 256)
 			{
@@ -277,7 +302,6 @@ void toDecimal(int pos)
 			{
 				carry = 0;
 			}
-
 			byte6 = byte6 + byteTable[byteTablePos + 1] + carry;
 			if(byte6 >= 256)
 			{
@@ -288,13 +312,11 @@ void toDecimal(int pos)
 			{
 				carry = 0;
 			}
-
 			byte7 = byte7 + byteTable[byteTablePos + 0] + carry;
 			if(byte7 >= 256)
 			{
 				byte7 -= 256;
 			}
-
 			multiplier--;
 		}
 		byteTablePos -= 8;
@@ -302,10 +324,13 @@ void toDecimal(int pos)
 	}
 }
 
-// If the number being checked is not a valid decimal or hexadecimal value, then byte0 is -1.
-int getNumber(int getNumberMnemonicPos)
+// Evaluate the expression.
+int evaluateExpression(int evaluateExpressionMnemonicPos)
 {
-	int pos = getNumberMnemonicPos;
+	valueNotDefined = false;
+	// If the number being checked is not a valid decimal or hexadecimal value, then byte0 is -1.
+	int pos = evaluateExpressionMnemonicPos;
+	int origPos = evaluateExpressionMnemonicPos;
 	byte0 = -1;
 	byte1 = 0;
 	byte2 = 0;
@@ -324,7 +349,7 @@ int getNumber(int getNumberMnemonicPos)
 		{
 			pos++;
 		}
-		getNumberMnemonicPos = pos;
+		evaluateExpressionMnemonicPos = pos;
 		pos--;
 		toHex(pos);
 	}
@@ -332,7 +357,7 @@ int getNumber(int getNumberMnemonicPos)
 	{
 		// Decimal value found.
 		while(loadedFile[pos] >= '0' && loadedFile[pos] <= '9') pos++;
-		getNumberMnemonicPos = pos;
+		evaluateExpressionMnemonicPos = pos;
 		pos--;
 		toDecimal(pos);
 	}
@@ -340,7 +365,52 @@ int getNumber(int getNumberMnemonicPos)
 	{
 		byte0 = -1;
 	}
-	return getNumberMnemonicPos;
+	if(byte0 != -1)
+	{
+		numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
+		return evaluateExpressionMnemonicPos;
+	}
+	else
+	{
+		valueNotDefined = true;
+		nameFoundAtLine = "";
+		int pos = origPos;
+		while(loadedFile[pos] > 32)
+		{
+			nameFoundAtLine = nameFoundAtLine + loadedFile[pos];
+			pos++;
+		}
+				evaluateExpressionMnemonicPos = pos;
+		pos = 0;
+		if(nameFoundAtLine == "*")
+		{
+			byte0 = CPUAddress & 0xFF;
+			byte1 = (CPUAddress >> 8) & 0xFF;
+			byte2 = (CPUAddress >> 16) & 0xFF;
+			byte3 = (CPUAddress >> 24) & 0xFF;
+			numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
+			valueNotDefined = false;
+			return evaluateExpressionMnemonicPos;
+		}
+		else
+		{
+			while(pos < variablesSize)
+			{
+				if(nameFoundAtLine == variableNames[pos])
+				{
+					byte0 = variableValues[pos] & 0xFF;
+					byte1 = (variableValues[pos] >> 8) & 0xFF;
+					byte2 = (variableValues[pos] >> 16) & 0xFF;
+					byte3 = (variableValues[pos] >> 24) & 0xFF;
+					numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
+					valueNotDefined = false;
+					return evaluateExpressionMnemonicPos;
+				}
+				pos++;
+			}
+		}
+	}
+	return evaluateExpressionMnemonicPos;
 }
 
 // If the currently checked line didn't match any existing instruction, then we go to the next line of the ISA file.
@@ -364,8 +434,9 @@ void nextLineOfIsaFile()
 	if(isaPos >= isaSize)
 	{
 		checkingSourceInstruction = false;
-		cError = errUNKNOWNINSTRUCTION;
+		possibleError = true;
 		if(invalidValueFindAlternativeInstruction) cError = errVALUEOUTOFRANGE;
+		if(valueNotDefined) cError = errVALUENOTDEFINED;
 	}
 	isaMnemonicPos = isaPos + 78;
 	isaLine += 2;
@@ -373,11 +444,399 @@ void nextLineOfIsaFile()
 	valueStackPopPointer = 99;
 }
 
+void processDirective(string directive)
+{
+	if(directive == "org")
+	{
+		while(loadedFile[sourceLineOffset] <= 32) sourceLineOffset++;
+		sourceLineOffset = evaluateExpression(sourceLineOffset);
+		CPUAddress = numericValue;
+	}
+	if(directive == "byte")
+	{
+		bool checking = true;
+		while(checking)
+		{
+			while(loadedFile[sourceLineOffset] == 32) sourceLineOffset++;
+			if(loadedFile[sourceLineOffset] == 10 || loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == ';')
+			{
+				checking = false;
+				if(loadedFile[sourceLineOffset] == ';')
+				{
+					while(loadedFile[sourceLineOffset] != 10 && loadedFile[sourceLineOffset] != 13) sourceLineOffset++;
+				}
+			}
+			else
+			{
+				while(loadedFile[sourceLineOffset] <= 32) sourceLineOffset++;
+				if(loadedFile[sourceLineOffset] == ',')
+				{
+					sourceLineOffset++;
+					while(loadedFile[sourceLineOffset] <= 32) sourceLineOffset++;
+				}
+				sourceLineOffset = evaluateExpression(sourceLineOffset);
+				if(byte0 == -1)
+				{
+					checkingSourceInstruction = false;
+					cError = errSYNTAXERROR;
+					checking = false;
+				}
+				else
+				{
+					writeByte(byte0);
+				}
+			}
+		}
+	}
+	if(directive == "text")
+	{
+		while(loadedFile[sourceLineOffset] != '"')
+		{
+			sourceLineOffset++;
+			if(sourceLineOffset >= loadedSize)
+			{
+				checkingSourceInstruction = false;
+				cError = errENDOFFILE;
+				break;
+			}
+		}
+		sourceLineOffset++;
+		while(loadedFile[sourceLineOffset] != '"')
+		{
+			if(loadedFile[sourceLineOffset] == '\\') sourceLineOffset++;
+			writeByte(loadedFile[sourceLineOffset]);
+			sourceLineOffset++;
+			if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10 || sourceLineOffset >= loadedSize)
+			{
+				checkingSourceInstruction = false;
+				cError = errENDOFFILE;
+				break;
+			}
+		}
+		sourceLineOffset++;
+	}
+}
+
+void assemble()
+{
+	valueNotDefined = false;
+	possibleError = false;
+	CPUAddress = 0;
+	currentLine = 1;
+	cError = 0;
+	savedSize = 0;
+	sourcePos = 0;
+	while(sourcePos < loadedSize)
+	{
+		// Read a line from the file. First, ignore all the chars of value 32 or less.
+		while(loadedFile[sourcePos] < 33) sourcePos++;
+		sourceLineOffset = sourcePos;
+		checkingSourceInstruction = true;
+		isaPos = 0;
+		isaLine = 1;
+		isaMnemonicPos = isaPos + 78;
+		valueStackPushPointer = 99;
+		valueStackPopPointer = 99;
+		invalidValueFindAlternativeInstruction = false;
+		instructionFound = false;
+		int checkOffset = sourceLineOffset;
+		int backToThisOffset = checkOffset;
+		bool isExpression = false;
+		while(checkOffset < loadedSize && loadedFile[checkOffset] != 10 && loadedFile[checkOffset] != 13)
+		{
+			if(loadedFile[checkOffset] == '=')
+			{
+				isExpression = true;
+				break;
+			}
+			checkOffset++;
+		}
+		// Make sure the '=' really signifies expression by checking whether it is preceded by a comment character.
+		if(isExpression)
+		{
+			while(checkOffset > backToThisOffset)
+			{
+				if(loadedFile[checkOffset] == ';')
+				{
+					isExpression = false;
+					break;
+				}
+				checkOffset--;
+			}
+		}
+		if(isExpression)
+		{
+			if(passes == 0)
+			{
+				checkOffset = sourceLineOffset;
+				string nameToAdd = "";
+				while(loadedFile[checkOffset] > 32)
+				{
+					nameToAdd = nameToAdd + loadedFile[checkOffset];
+					checkOffset++;
+				}
+				while(loadedFile[checkOffset] != '=') checkOffset++;
+				checkOffset++;
+				while(loadedFile[checkOffset] <= 32) checkOffset++;
+				checkOffset = evaluateExpression(checkOffset);
+				variableNames[variablesSize] = nameToAdd;
+				variableValues[variablesSize] = numericValue;
+				variablesSize++;
+			}
+		}
+		else
+		{
+			while(checkingSourceInstruction)
+			{
+				if(isaFile[isaMnemonicPos] == 13 || isaFile[isaMnemonicPos] == 10 || isaMnemonicPos >= isaSize)
+				{
+					if((isaMnemonicPos + 1) < isaSize)
+					{
+						if(isaFile[isaMnemonicPos] == 13 && isaFile[isaMnemonicPos + 1] == 10)
+						{
+							isaMnemonicPos++;
+						}
+					}
+					isaMnemonicPos++;
+					// Instruction found?
+					int savedsourceLineOffset = sourceLineOffset;
+					while(loadedFile[sourceLineOffset] == 0 || loadedFile[sourceLineOffset] == 7 || loadedFile[sourceLineOffset] == 32)
+					{
+						sourceLineOffset++;
+					}
+					if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10 || loadedFile[sourceLineOffset] == ';')
+					{
+						// Instruction found! Now write the opcode & possible param(s) to the output file.
+						checkingSourceInstruction = false;
+						sourceLineOffset = savedsourceLineOffset;
+						instructionFound = true;
+						char digit1 = isaFile[isaPos];
+						char digit2 = isaFile[isaPos + 1];
+						while(digit1 != 32)
+						{
+							writeDigitsAsByte(digit1, digit2);
+							isaPos += 3;
+							digit1 = isaFile[isaPos];
+							digit2 = isaFile[isaPos + 1];
+						}
+					}
+					else
+					{
+						// Nope, must keep looking for a completely matching instruction.
+						sourceLineOffset = savedsourceLineOffset;
+						nextLineOfIsaFile();
+					}
+				}
+				else
+				{
+					while(loadedFile[sourceLineOffset] <= 32)
+					{
+						sourceLineOffset++;
+					}
+					char comparedChar = loadedFile[sourceLineOffset];
+					if(comparedChar >= 'a' && comparedChar <= 'z') comparedChar -= 32;
+					if(isaFile[isaMnemonicPos] == comparedChar)
+					{
+						sourceLineOffset++;
+						isaMnemonicPos++;
+						while(isaFile[isaMnemonicPos] == 32) isaMnemonicPos++;
+					}
+					// Assembler directive?
+					else if(comparedChar == '.')
+					{
+						sourceLineOffset++;
+						string directive = "";
+						while(loadedFile[sourceLineOffset] != 0 &&
+loadedFile[sourceLineOffset] != 7 &&
+loadedFile[sourceLineOffset] != 10 &&
+loadedFile[sourceLineOffset] != 13 &&
+loadedFile[sourceLineOffset] != 32)
+						{
+							directive = directive + loadedFile[sourceLineOffset];
+							sourceLineOffset++;
+						}
+						for(int pos = 0; pos < directive.length(); pos++)
+						{
+							if(directive[pos] >= 'A' && directive[pos] <= 'Z') directive[pos] = directive[pos] + 32;
+						}
+						processDirective(directive);
+						checkingSourceInstruction = false;
+					}
+					// Comment? Then we ignore all characters except for line break.
+					else if(comparedChar == ';')
+					{
+						checkingSourceInstruction = false;
+					}
+					else if(isaFile[isaMnemonicPos] == '!')
+					{
+						/*
+						Expecting 8-bit value in the source file.
+						If the value is larger than 8 bits, then we go looking for a version of this
+						instruction where the value is allowed.
+						If no such instruction is found, then we have a "Value out of range" error.
+						*/
+						isaMnemonicPos += 2;
+						sourceLineOffset = evaluateExpression(sourceLineOffset);
+						if(byte0 == -1)
+						{
+							nextLineOfIsaFile();
+						}
+						if(byte1 != 0 || byte2 != 0 || byte3 != 0 || byte4 != 0 || byte5 != 0 || byte6 != 0 || byte7 != 0)
+						{
+							invalidValueFindAlternativeInstruction = true;
+							allowedBitWidth = "8";
+							sourceLineOffset = sourcePos;
+							isaPos = isaMnemonicPos;
+							while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
+							{
+								isaPos++;
+								if(isaPos >= isaSize) break;
+							}
+							if((isaPos + 1) < isaSize)
+							{
+								if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10) isaPos++;
+							}
+							isaPos++;
+							if(isaPos >= isaSize)
+							{
+								checkingSourceInstruction = false;
+								possibleError = true;
+								if(invalidValueFindAlternativeInstruction) cError = errVALUEOUTOFRANGE;
+							}
+							isaMnemonicPos = isaPos + 78;
+						}
+						else push();
+					}
+					else if(isaFile[isaMnemonicPos] == '?')
+					{
+						/*
+						Expecting 16-bit value in the source file.
+						If the value is larger than 16 bits, then we go looking for a version of this
+						instruction where the value is allowed.
+						If no such instruction is found, then we have a "Value out of range" error.
+						*/
+						isaMnemonicPos += 2;
+						sourceLineOffset = evaluateExpression(sourceLineOffset);
+						if(byte0 == -1)
+						{
+							nextLineOfIsaFile();
+						}
+						if(byte2 != 0 || byte3 != 0 || byte4 != 0 || byte5 != 0 || byte6 != 0 || byte7 != 0)
+						{
+							invalidValueFindAlternativeInstruction = true;
+							allowedBitWidth = "16";
+							sourceLineOffset = sourcePos;
+							isaPos = isaMnemonicPos;
+							while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
+							{
+								isaPos++;
+								if(isaPos >= isaSize) break;
+							}
+							if((isaPos + 1) < isaSize)
+							{
+								if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10) isaPos++;
+							}
+							isaPos++;
+							if(isaPos >= isaSize)
+							{
+								checkingSourceInstruction = false;
+								possibleError = true;
+								if(invalidValueFindAlternativeInstruction) cError = errVALUEOUTOFRANGE;
+							}
+							isaMnemonicPos = isaPos + 78;
+						}
+						else push();
+					}
+					else if(isaFile[isaMnemonicPos] == '"')
+					{
+						// Expecting 64-bit value in the source file.
+						isaMnemonicPos += 2;
+						sourceLineOffset = evaluateExpression(sourceLineOffset);
+						if(byte0 == -1)
+						{
+							nextLineOfIsaFile();
+						}
+						else push();
+					}
+					else if(isaFile[isaMnemonicPos] == '@')
+					{
+						// Value in source file is an 8-bit relative value.
+						isaMnemonicPos += 2;
+						sourceLineOffset = evaluateExpression(sourceLineOffset);
+						if(byte0 == -1)
+						{
+							cError = errVALUENOTDEFINED;
+							push();
+						}
+						else
+						{
+							int relativeJumpValue = numericValue - CPUAddress - 2;
+							byte0 = (relativeJumpValue & 255);
+							push();
+							if(relativeJumpValue < -128 || relativeJumpValue > 127)
+							{
+								checkingSourceInstruction = false;
+								cError = errBRANCHOUTOFRANGE;
+							}
+						}
+					}
+					else
+					{
+						nextLineOfIsaFile();
+					}
+				}
+			}
+		}
+		if(possibleError != 0)
+		{
+			possibleError = false;
+			lineContent = "";
+			sourceLineOffset = sourcePos;
+			while(loadedFile[sourceLineOffset] != 13 && loadedFile[sourceLineOffset] != 10 && sourceLineOffset < loadedSize)
+			{
+				lineContent = lineContent + loadedFile[sourceLineOffset];
+				sourceLineOffset++;
+			}
+			bool checking = true;
+			bool errorTrue = false;
+			int pos = 0;
+			while(checking)
+			{
+				if(lineContent[pos] == ' ')
+				{
+					checking = false;
+					errorTrue = true;
+				}
+				pos++;
+				if(pos >= lineContent.length()) checking = false;
+			}
+			if(!errorTrue)
+			{
+				if(passes == 0)
+				{
+					variableNames[variablesSize] = lineContent;
+					variableValues[variablesSize] = CPUAddress;
+					variablesSize++;
+				}
+			}
+			else cError = errUNKNOWNINSTRUCTION;
+		}
+		// Go to the next line of the source file.
+		while(loadedFile[sourcePos] != 13 && loadedFile[sourcePos] != 10) sourcePos++;
+		if((sourcePos + 1) < loadedSize)
+		{
+			if(loadedFile[sourcePos] == 13 && loadedFile[sourcePos + 1] == 10) sourcePos++;
+		}
+		sourcePos++;
+		if(!possibleError && cError == 0) currentLine++;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	if(argc < 2)
 	{
-		cout << "JAssembler v0.1" << endl;
+		cout << "JAssembler v0.2" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
@@ -433,183 +892,13 @@ int main(int argc, char **argv)
 	}
 	sourcefile.close();
 	// Here we start assembling the source file into binary.
-	sourcePos = 0;
-	while(sourcePos < loadedSize)
+	passes = 0;
+	assemble();
+	passes++;
+	if(cError != 0)
 	{
-		// Read a line from the file. First, ignore all the chars of value 32 or less.
-		while(loadedFile[sourcePos] < 33) sourcePos++;
-		sourceLineOffset = sourcePos;
-		checkingSourceInstruction = true;
-		isaPos = 0;
-		isaLine = 1;
-		isaMnemonicPos = isaPos + 78;
-		valueStackPushPointer = 99;
-		valueStackPopPointer = 99;
-		invalidValueFindAlternativeInstruction = false;
-		instructionFound = false;
-		while(checkingSourceInstruction)
-		{
-			if(isaFile[isaMnemonicPos] == 13 || isaFile[isaMnemonicPos] == 10 || isaMnemonicPos >= isaSize)
-			{
-				if((isaMnemonicPos + 1) < isaSize)
-				{
-					if(isaFile[isaMnemonicPos] == 13 && isaFile[isaMnemonicPos + 1] == 10)
-					{
-						isaMnemonicPos++;
-					}
-				}
-				isaMnemonicPos++;
-				// Instruction found?
-				int savedsourceLineOffset = sourceLineOffset;
-				while(loadedFile[sourceLineOffset] == 0 || loadedFile[sourceLineOffset] == 7 || loadedFile[sourceLineOffset] == 32)
-				{
-					sourceLineOffset++;
-				}
-				if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10 || loadedFile[sourceLineOffset] == ';')
-				{
-					// Instruction found! Now write the opcode & possible param(s) to the output file.
-					checkingSourceInstruction = false;
-					sourceLineOffset = savedsourceLineOffset;
-					instructionFound = true;
-					char digit1 = isaFile[isaPos];
-					char digit2 = isaFile[isaPos + 1];
-					while(digit1 != 32)
-					{
-						writeByte(digit1, digit2);
-						isaPos += 3;
-						digit1 = isaFile[isaPos];
-						digit2 = isaFile[isaPos + 1];
-					}
-				}
-				else
-				{
-					// Nope, must keep looking for a completely matching instruction.
-					sourceLineOffset = savedsourceLineOffset;
-					nextLineOfIsaFile();
-				}
-			}
-			else
-			{
-				while(loadedFile[sourceLineOffset] <= 32) sourceLineOffset++;
-				char comparedChar = loadedFile[sourceLineOffset];
-				if(comparedChar >= 'a' && comparedChar <= 'z') comparedChar -= 32;
-				if(isaFile[isaMnemonicPos] == comparedChar)
-				{
-					sourceLineOffset++;
-					isaMnemonicPos++;
-					while(isaFile[isaMnemonicPos] == 32) isaMnemonicPos++;
-				}
-				// Comment? Then we ignore all characters except for line break.
-				else if(comparedChar == ';')
-				{
-					checkingSourceInstruction = false;
-				}
-				else if(isaFile[isaMnemonicPos] == '!')
-				{
-					/*
-					Expecting 8-bit value in the source file.
-					If the value is larger than 8 bits, then we go looking for a version of this
-					instruction where the value is allowed.
-					If no such instruction is found, then we have a "Value out of range" error.
-					*/
-					isaMnemonicPos += 2;
-					sourceLineOffset = getNumber(sourceLineOffset);
-					if(byte0 == -1)
-					{
-						nextLineOfIsaFile();
-					}
-					if(byte1 != 0 || byte2 != 0 || byte3 != 0 || byte4 != 0 || byte5 != 0 || byte6 != 0 || byte7 != 0)
-					{
-						invalidValueFindAlternativeInstruction = true;
-						allowedBitWidth = "8";
-						sourceLineOffset = sourcePos;
-						isaPos = isaMnemonicPos;
-						while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
-						{
-							isaPos++;
-							if(isaPos >= isaSize) break;
-						}
-						if((isaPos + 1) < isaSize)
-						{
-							if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10) isaPos++;
-						}
-						isaPos++;
-						if(isaPos >= isaSize)
-						{
-							checkingSourceInstruction = false;
-							cError = errUNKNOWNINSTRUCTION;
-							if(invalidValueFindAlternativeInstruction) cError = errVALUEOUTOFRANGE;
-						}
-						isaMnemonicPos = isaPos + 78;
-					}
-					else push();
-				}
-				else if(isaFile[isaMnemonicPos] == '?')
-				{
-					/*
-					Expecting 16-bit value in the source file.
-					If the value is larger than 16 bits, then we go looking for a version of this
-					instruction where the value is allowed.
-					If no such instruction is found, then we have a "Value out of range" error.
-					*/
-					isaMnemonicPos += 2;
-					sourceLineOffset = getNumber(sourceLineOffset);
-					if(byte0 == -1)
-					{
-						nextLineOfIsaFile();
-					}
-					if(byte2 != 0 || byte3 != 0 || byte4 != 0 || byte5 != 0 || byte6 != 0 || byte7 != 0)
-					{
-						invalidValueFindAlternativeInstruction = true;
-						allowedBitWidth = "16";
-						sourceLineOffset = sourcePos;
-						isaPos = isaMnemonicPos;
-						while(isaFile[isaPos] != 13 && isaFile[isaPos] != 10)
-						{
-							isaPos++;
-							if(isaPos >= isaSize) break;
-						}
-						if((isaPos + 1) < isaSize)
-						{
-							if(isaFile[isaPos] == 13 && isaFile[isaPos + 1] == 10) isaPos++;
-						}
-						isaPos++;
-						if(isaPos >= isaSize)
-						{
-							checkingSourceInstruction = false;
-							cError = errUNKNOWNINSTRUCTION;
-							if(invalidValueFindAlternativeInstruction) cError = errVALUEOUTOFRANGE;
-						}
-						isaMnemonicPos = isaPos + 78;
-					}
-					else push();
-				}
-				else if(isaFile[isaMnemonicPos] == '"')
-				{
-					// Expecting 64-bit value in the source file.
-					isaMnemonicPos += 2;
-					sourceLineOffset = getNumber(sourceLineOffset);
-					if(byte0 == -1)
-					{
-						nextLineOfIsaFile();
-					}
-					else push();
-				}
-				else
-				{
-					nextLineOfIsaFile();
-				}
-			}
-		}
-		if(cError != 0) break;
-		// Go to the next line of the source file.
-		while(loadedFile[sourcePos] != 13 && loadedFile[sourcePos] != 10) sourcePos++;
-		if((sourcePos + 1) < loadedSize)
-		{
-			if(loadedFile[sourcePos] == 13 && loadedFile[sourcePos + 1] == 10) sourcePos++;
-		}
-		sourcePos++;
-		currentLine++;
+		assemble(); // Second pass, in case there were errors in the first one (such as variables which were not found).
+		passes++;
 	}
 	switch(cError)
 	{
@@ -620,6 +909,18 @@ int main(int argc, char **argv)
 			break;
 		case errVALUEOUTOFRANGE:
 			error("Value out of range - " + allowedBitWidth + "-bit value expected");
+			break;
+		case errBRANCHOUTOFRANGE:
+			error("Target address out of range");
+			break;
+		case errSYNTAXERROR:
+			error("Syntax error");
+			break;
+		case errENDOFFILE:
+			error("Unexpected end of file");
+			break;
+		case errVALUENOTDEFINED:
+			error("Value not defined");
 			break;
 	}
 	if(cError != 0) return (1);
