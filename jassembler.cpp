@@ -4,6 +4,8 @@
 #define errSYNTAXERROR 4
 #define errENDOFFILE 5
 #define errVALUENOTDEFINED 6
+#define errUNKNOWNDIRECTIVE 7
+#define errFILEINCLUDEERROR 8
 
 #include <iostream>
 #include <fstream>
@@ -452,7 +454,7 @@ void processDirective(string directive)
 		sourceLineOffset = evaluateExpression(sourceLineOffset);
 		CPUAddress = numericValue;
 	}
-	if(directive == "byte")
+	else if(directive == "byte")
 	{
 		bool checking = true;
 		while(checking)
@@ -488,7 +490,7 @@ void processDirective(string directive)
 			}
 		}
 	}
-	if(directive == "text")
+	else if(directive == "text")
 	{
 		while(loadedFile[sourceLineOffset] != '"')
 		{
@@ -515,6 +517,61 @@ void processDirective(string directive)
 		}
 		sourceLineOffset++;
 	}
+	else if(directive == "bin")
+	{
+		while(loadedFile[sourceLineOffset] != '"')
+		{
+			sourceLineOffset++;
+			if(sourceLineOffset >= loadedSize)
+			{
+				checkingSourceInstruction = false;
+				cError = errENDOFFILE;
+				break;
+			}
+		}
+		sourceLineOffset++;
+		char binToLoadName[256];
+		int filenamepos = 0;
+		while(loadedFile[sourceLineOffset] != '"')
+		{
+			binToLoadName[filenamepos] = loadedFile[sourceLineOffset];
+			sourceLineOffset++;
+			filenamepos++;
+			if(loadedFile[sourceLineOffset] == 13 || loadedFile[sourceLineOffset] == 10 || sourceLineOffset >= loadedSize)
+			{
+				checkingSourceInstruction = false;
+				cError = errENDOFFILE;
+				break;
+			}
+		}
+		binToLoadName[filenamepos] = 0;
+		sourceLineOffset++;
+		char * binFile = (char*) malloc(1920138);
+		int binSize = 0;
+		ifstream binToLoad(binToLoadName, ios::in|ios::binary|ios::ate);
+		if(binToLoad)
+		{
+			binSize = binToLoad.tellg();
+			binToLoad.seekg (0, ios::beg);
+			binToLoad.read (binFile, binSize);
+			binToLoad.close();
+		}
+		else
+		{
+			cError = errFILEINCLUDEERROR;
+			checkingSourceInstruction = false;
+		}
+		for(int pos = 0; pos < binSize; pos++)
+		{
+			writeByte(binFile[pos]);
+		}
+		free (binFile);
+	}
+	else
+	{
+		checkingSourceInstruction = false;
+		cError = errUNKNOWNDIRECTIVE;
+	}
 }
 
 void assemble()
@@ -528,6 +585,7 @@ void assemble()
 	sourcePos = 0;
 	while(sourcePos < loadedSize)
 	{
+		int backToThisOffset = sourcePos;
 		// Read a line from the file. First, ignore all the chars of value 32 or less.
 		while(loadedFile[sourcePos] < 33) sourcePos++;
 		sourceLineOffset = sourcePos;
@@ -540,7 +598,6 @@ void assemble()
 		invalidValueFindAlternativeInstruction = false;
 		instructionFound = false;
 		int checkOffset = sourceLineOffset;
-		int backToThisOffset = checkOffset;
 		bool isExpression = false;
 		while(checkOffset < loadedSize && loadedFile[checkOffset] != 10 && loadedFile[checkOffset] != 13)
 		{
@@ -554,7 +611,7 @@ void assemble()
 		// Make sure the '=' really signifies expression by checking whether it is preceded by a comment character.
 		if(isExpression)
 		{
-			while(checkOffset > backToThisOffset)
+			while(checkOffset > (backToThisOffset - 1))
 			{
 				if(loadedFile[checkOffset] == ';')
 				{
@@ -564,13 +621,18 @@ void assemble()
 				checkOffset--;
 			}
 		}
+		if(loadedFile[backToThisOffset] == 10 || loadedFile[backToThisOffset] == 13)
+		{
+			isExpression = false;
+			checkingSourceInstruction = false;
+		}
 		if(isExpression)
 		{
 			if(passes == 0)
 			{
 				checkOffset = sourceLineOffset;
 				string nameToAdd = "";
-				while(loadedFile[checkOffset] > 32)
+				while(loadedFile[checkOffset] > 32 && loadedFile[checkOffset] != '=')
 				{
 					nameToAdd = nameToAdd + loadedFile[checkOffset];
 					checkOffset++;
@@ -582,6 +644,8 @@ void assemble()
 				variableNames[variablesSize] = nameToAdd;
 				variableValues[variablesSize] = numericValue;
 				variablesSize++;
+				possibleError = false;
+				cError = 0;
 			}
 		}
 		else
@@ -822,6 +886,7 @@ loadedFile[sourceLineOffset] != 32)
 			else cError = errUNKNOWNINSTRUCTION;
 		}
 		// Go to the next line of the source file.
+		sourcePos = backToThisOffset;
 		while(loadedFile[sourcePos] != 13 && loadedFile[sourcePos] != 10) sourcePos++;
 		if((sourcePos + 1) < loadedSize)
 		{
@@ -836,7 +901,7 @@ int main(int argc, char **argv)
 {
 	if(argc < 2)
 	{
-		cout << "JAssembler v0.2" << endl;
+		cout << "JAssembler v0.3" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
@@ -921,6 +986,12 @@ int main(int argc, char **argv)
 			break;
 		case errVALUENOTDEFINED:
 			error("Value not defined");
+			break;
+		case errUNKNOWNDIRECTIVE:
+			error("Unknown Assembler directive");
+			break;
+		case errFILEINCLUDEERROR:
+			error("File not found or other file error");
 			break;
 	}
 	if(cError != 0) return (1);
