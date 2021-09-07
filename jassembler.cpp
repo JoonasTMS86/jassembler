@@ -6,6 +6,7 @@
 #define errVALUENOTDEFINED 6
 #define errUNKNOWNDIRECTIVE 7
 #define errFILEINCLUDEERROR 8
+#define errINVALIDFILLNUMBER 9
 
 #include <iostream>
 #include <fstream>
@@ -326,13 +327,66 @@ void toDecimal(int pos)
 	}
 }
 
+void doNumericValue(bool lobyte, bool hibyte)
+{
+	if(byte0 == -1 || valueNotDefined)
+	{
+	}
+	else
+	{
+		if(lobyte)
+		{
+			byte1 = 0;
+			byte2 = 0;
+			byte3 = 0;
+			byte4 = 0;
+			byte5 = 0;
+			byte6 = 0;
+			byte7 = 0;
+		}
+		if(hibyte)
+		{
+			if(byte7 != 0) byte0 = byte7;
+			else if(byte6 != 0) byte0 = byte6;
+			else if(byte5 != 0) byte0 = byte5;
+			else if(byte4 != 0) byte0 = byte4;
+			else if(byte3 != 0) byte0 = byte3;
+			else if(byte2 != 0) byte0 = byte2;
+			else if(byte1 != 0) byte0 = byte1;
+			byte1 = 0;
+			byte2 = 0;
+			byte3 = 0;
+			byte4 = 0;
+			byte5 = 0;
+			byte6 = 0;
+			byte7 = 0;
+		}
+		numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
+	}
+}
+
 // Evaluate the expression.
 int evaluateExpression(int evaluateExpressionMnemonicPos)
 {
+	numericValue = -1;
+	bool lobyte = false;
+	bool hibyte = false;
 	valueNotDefined = false;
 	// If the number being checked is not a valid decimal or hexadecimal value, then byte0 is -1.
 	int pos = evaluateExpressionMnemonicPos;
 	int origPos = evaluateExpressionMnemonicPos;
+	if(loadedFile[pos] == '<')
+	{
+		lobyte = true;
+		pos++;
+		origPos++;
+	}
+	else if(loadedFile[pos] == '>')
+	{
+		hibyte = true;
+		pos++;
+		origPos++;
+	}
 	byte0 = -1;
 	byte1 = 0;
 	byte2 = 0;
@@ -369,7 +423,7 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 	}
 	if(byte0 != -1)
 	{
-		numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
+		doNumericValue(lobyte, hibyte);
 		return evaluateExpressionMnemonicPos;
 	}
 	else
@@ -390,8 +444,8 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 			byte1 = (CPUAddress >> 8) & 0xFF;
 			byte2 = (CPUAddress >> 16) & 0xFF;
 			byte3 = (CPUAddress >> 24) & 0xFF;
-			numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
 			valueNotDefined = false;
+			doNumericValue(lobyte, hibyte);
 			return evaluateExpressionMnemonicPos;
 		}
 		else
@@ -404,8 +458,8 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 					byte1 = (variableValues[pos] >> 8) & 0xFF;
 					byte2 = (variableValues[pos] >> 16) & 0xFF;
 					byte3 = (variableValues[pos] >> 24) & 0xFF;
-					numericValue = byte0 + (byte1 * 256) + (byte2 * 65536) + (byte3 * 16777216);
 					valueNotDefined = false;
+					doNumericValue(lobyte, hibyte);
 					return evaluateExpressionMnemonicPos;
 				}
 				pos++;
@@ -438,7 +492,10 @@ void nextLineOfIsaFile()
 		checkingSourceInstruction = false;
 		possibleError = true;
 		if(invalidValueFindAlternativeInstruction) cError = errVALUEOUTOFRANGE;
-		if(valueNotDefined) cError = errVALUENOTDEFINED;
+		if(valueNotDefined)
+		{
+			if(cError != errVALUEOUTOFRANGE) cError = errVALUENOTDEFINED;
+		}
 	}
 	isaMnemonicPos = isaPos + 78;
 	isaLine += 2;
@@ -566,6 +623,44 @@ void processDirective(string directive)
 			writeByte(binFile[pos]);
 		}
 		free (binFile);
+	}
+	else if(directive == "fill")
+	{
+		while(loadedFile[sourceLineOffset] <= 32) sourceLineOffset++;
+		sourceLineOffset = evaluateExpression(sourceLineOffset); // How many
+		int howmany = numericValue;
+		while(loadedFile[sourceLineOffset] != ',') sourceLineOffset++;
+		sourceLineOffset++;
+		while(loadedFile[sourceLineOffset] <= 32) sourceLineOffset++;
+		sourceLineOffset = evaluateExpression(sourceLineOffset); // Byte with which to fill
+		int bytevalue = numericValue;
+		if(howmany == -1 || bytevalue == -1)
+		{
+			checkingSourceInstruction = false;
+			cError = errVALUENOTDEFINED;
+		}
+		else
+		{
+		if(howmany < 0)
+		{
+			checkingSourceInstruction = false;
+			cError = errINVALIDFILLNUMBER;
+		}
+		else if(bytevalue < 0 || bytevalue > 255)
+		{
+			allowedBitWidth = "8";
+			checkingSourceInstruction = false;
+			cError = errVALUEOUTOFRANGE;
+		}
+		else
+		{
+			while(howmany > 0)
+			{
+				writeByte(bytevalue);
+				howmany--;
+			}
+		}
+		}
 	}
 	else
 	{
@@ -829,7 +924,7 @@ loadedFile[sourceLineOffset] != 32)
 						sourceLineOffset = evaluateExpression(sourceLineOffset);
 						if(byte0 == -1)
 						{
-							cError = errVALUENOTDEFINED;
+							if(cError != errVALUEOUTOFRANGE) cError = errVALUENOTDEFINED;
 							push();
 						}
 						else
@@ -883,7 +978,10 @@ loadedFile[sourceLineOffset] != 32)
 					variablesSize++;
 				}
 			}
-			else cError = errUNKNOWNINSTRUCTION;
+			else
+			{
+				if(cError == 0) cError = errUNKNOWNINSTRUCTION;
+			}
 		}
 		// Go to the next line of the source file.
 		sourcePos = backToThisOffset;
@@ -992,6 +1090,9 @@ int main(int argc, char **argv)
 			break;
 		case errFILEINCLUDEERROR:
 			error("File not found or other file error");
+			break;
+		case errINVALIDFILLNUMBER:
+			error("Parameter 1 for fill must be 0 or greater");
 			break;
 	}
 	if(cError != 0) return (1);
