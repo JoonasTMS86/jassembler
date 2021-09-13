@@ -37,12 +37,12 @@
 24                                                                            DEC HX
 25                                                                            INB (AX)
 26                                                                            INC (AX)
-27 ""                                                                         INB ""
-28 ""                                                                         INC ""
+27 ""                                                                         INB ~~
+28 ""                                                                         INC ~~
 29                                                                            DEB (AX)
 2A                                                                            DEC (AX)
-2B ""                                                                         DEB ""
-2C ""                                                                         DEC ""
+2B ""                                                                         DEB ~~
+2C ""                                                                         DEC ~~
 2D !!                                                                         ADC AL,#!!
 2E ""                                                                         ADC AX,#""
 2F                                                                            ADC AX,AX
@@ -65,8 +65,8 @@
 40                                                                            ADD AX,HX
 41 !!                                                                         BIT AL,#!!
 42 ""                                                                         BIT AX,#""
-43 ""                                                                         BIT "",AX
-44 ""                                                                         BIT "",AL
+43 ""                                                                         BIT ~~,AX
+44 ""                                                                         BIT ~~,AL
 45                                                                            BIT AL,AL
 46                                                                            BIT AL,BL
 47                                                                            BIT AL,CL
@@ -100,8 +100,8 @@
 63 ""                                                                         AND FX,#""
 64 ""                                                                         AND GX,#""
 65 ""                                                                         AND HX,#""
-66 ""                                                                         AND AX,""
-67 ""                                                                         AND AL,""
+66 ""                                                                         AND AX,~~
+67 ""                                                                         AND AL,~~
 68                                                                            AND AL,AL
 69                                                                            AND AL,BL
 6A                                                                            AND AL,CL
@@ -135,8 +135,8 @@
 86 ""                                                                         CMP FX,#""
 87 ""                                                                         CMP GX,#""
 88 ""                                                                         CMP HX,#""
-89 ""                                                                         CMP AX,""
-8A ""                                                                         CMP AL,""
+89 ""                                                                         CMP AX,~~
+8A ""                                                                         CMP AL,~~
 8B                                                                            CMP AL,AL
 8C                                                                            CMP AL,BL
 8D                                                                            CMP AL,CL
@@ -154,25 +154,25 @@
 99                                                                            CMP AX,GX
 9A                                                                            CMP AX,HX
 9B                                                                            CMP AX,(BX)
-9C "" "" ""                                                                   BLT "",#"",""
+9C "" "" ""                                                                   BLT ~~,#"",~~
 9D                                                                            BLT (AX),BX,(CX)
-9E ""                                                                         JMP ""
-9F ""                                                                         JMP N,""
-A0 ""                                                                         JMP 6,""
-A1 ""                                                                         JMP 5,""
-A2 ""                                                                         JMP 4,""
-A3 ""                                                                         JMP 3,""
-A4 ""                                                                         JMP 2,""
-A5 ""                                                                         JMP Z,""
-A6 ""                                                                         JMP C,""
-A7 ""                                                                         JMP NN,""
-A8 ""                                                                         JMP N6,""
-A9 ""                                                                         JMP N5,""
-AA ""                                                                         JMP N4,""
-AB ""                                                                         JMP N3,""
-AC ""                                                                         JMP N2,""
-AD ""                                                                         JMP NZ,""
-AE ""                                                                         JMP NC,""
+9E ""                                                                         JMP ~~
+9F ""                                                                         JMP N,~~
+A0 ""                                                                         JMP 6,~~
+A1 ""                                                                         JMP 5,~~
+A2 ""                                                                         JMP 4,~~
+A3 ""                                                                         JMP 3,~~
+A4 ""                                                                         JMP 2,~~
+A5 ""                                                                         JMP Z,~~
+A6 ""                                                                         JMP C,~~
+A7 ""                                                                         JMP NN,~~
+A8 ""                                                                         JMP N6,~~
+A9 ""                                                                         JMP N5,~~
+AA ""                                                                         JMP N4,~~
+AB ""                                                                         JMP N3,~~
+AC ""                                                                         JMP N2,~~
+AD ""                                                                         JMP NZ,~~
+AE ""                                                                         JMP NC,~~
 AF                                                                            JMP (AX)
 B0                                                                            JMP N,(AX)
 B1                                                                            JMP 6,(AX)
@@ -190,23 +190,23 @@ BC                                                                            JM
 BD                                                                            JMP N2,(AX)
 BE                                                                            JMP NZ,(AX)
 BF                                                                            JMP NC,(AX)
-C0 ""                                                                         JSR ""
-C1 ""                                                                         JSR N,""
-C2 ""                                                                         JSR 6,""
-C3 ""                                                                         JSR 5,""
-C4 ""                                                                         JSR 4,""
-C5 ""                                                                         JSR 3,""
-C6 ""                                                                         JSR 2,""
-C7 ""                                                                         JSR Z,""
-C8 ""                                                                         JSR C,""
-C9 ""                                                                         JSR NN,""
-CA ""                                                                         JSR N6,""
-CB ""                                                                         JSR N5,""
-CC ""                                                                         JSR N4,""
-CD ""                                                                         JSR N3,""
-CE ""                                                                         JSR N2,""
-CF ""                                                                         JSR NZ,""
-D0 ""                                                                         JSR NC,""
+C0 ""                                                                         JSR ~~
+C1 ""                                                                         JSR N,~~
+C2 ""                                                                         JSR 6,~~
+C3 ""                                                                         JSR 5,~~
+C4 ""                                                                         JSR 4,~~
+C5 ""                                                                         JSR 3,~~
+C6 ""                                                                         JSR 2,~~
+C7 ""                                                                         JSR Z,~~
+C8 ""                                                                         JSR C,~~
+C9 ""                                                                         JSR NN,~~
+CA ""                                                                         JSR N6,~~
+CB ""                                                                         JSR N5,~~
+CC ""                                                                         JSR N4,~~
+CD ""                                                                         JSR N3,~~
+CE ""                                                                         JSR N2,~~
+CF ""                                                                         JSR NZ,~~
+D0 ""                                                                         JSR NC,~~
 D1                                                                            JSR (AX)
 D2                                                                            JSR N,(AX)
 D3                                                                            JSR 6,(AX)
@@ -240,22 +240,22 @@ EE ""                                                                         LO
 EF ""                                                                         LOA FX,#""
 F0 ""                                                                         LOA GX,#""
 F1 ""                                                                         LOA HX,#""
-F2 ""                                                                         LOA AX,""
-F3 ""                                                                         LOA BX,""
-F4 ""                                                                         LOA CX,""
-F5 ""                                                                         LOA DX,""
-F6 ""                                                                         LOA EX,""
-F7 ""                                                                         LOA FX,""
-F8 ""                                                                         LOA GX,""
-F9 ""                                                                         LOA HX,""
-FA ""                                                                         LOA AL,""
-FB ""                                                                         LOA BL,""
-FC ""                                                                         LOA CL,""
-FD 00 ""                                                                      LOA DL,""
-FD 01 ""                                                                      LOA EL,""
-FD 02 ""                                                                      LOA FL,""
-FD 03 ""                                                                      LOA GL,""
-FD 04 ""                                                                      LOA HL,""
+F2 ""                                                                         LOA AX,~~
+F3 ""                                                                         LOA BX,~~
+F4 ""                                                                         LOA CX,~~
+F5 ""                                                                         LOA DX,~~
+F6 ""                                                                         LOA EX,~~
+F7 ""                                                                         LOA FX,~~
+F8 ""                                                                         LOA GX,~~
+F9 ""                                                                         LOA HX,~~
+FA ""                                                                         LOA AL,~~
+FB ""                                                                         LOA BL,~~
+FC ""                                                                         LOA CL,~~
+FD 00 ""                                                                      LOA DL,~~
+FD 01 ""                                                                      LOA EL,~~
+FD 02 ""                                                                      LOA FL,~~
+FD 03 ""                                                                      LOA GL,~~
+FD 04 ""                                                                      LOA HL,~~
 FD 05                                                                         LOA AL,BL
 FD 06                                                                         LOA AL,CL
 FD 07                                                                         LOA AL,DL
@@ -288,24 +288,24 @@ FD 21                                                                         LO
 FD 22 ""                                                                      LOA SP,#""
 FD 23                                                                         LOA SP,AX
 FD 24                                                                         LOA SP,(AX)
-FD 25 ""                                                                      LOA "",AX
-FD 26 ""                                                                      LOA "",BX
-FD 27 ""                                                                      LOA "",CX
-FD 28 ""                                                                      LOA "",DX
-FD 29 ""                                                                      LOA "",EX
-FD 2A ""                                                                      LOA "",FX
-FD 2B ""                                                                      LOA "",GX
-FD 2C ""                                                                      LOA "",HX
-FD 2D ""                                                                      LOA "",AL
-FD 2E ""                                                                      LOA "",BL
-FD 2F ""                                                                      LOA "",CL
-FD 30 ""                                                                      LOA "",DL
-FD 31 ""                                                                      LOA "",EL
-FD 32 ""                                                                      LOA "",FL
-FD 33 ""                                                                      LOA "",GL
-FD 34 ""                                                                      LOA "",HL
-FD 35 ""                                                                      LOA "",AT
-FD 36 ""                                                                      LOA "",AE
+FD 25 ""                                                                      LOA ~~,AX
+FD 26 ""                                                                      LOA ~~,BX
+FD 27 ""                                                                      LOA ~~,CX
+FD 28 ""                                                                      LOA ~~,DX
+FD 29 ""                                                                      LOA ~~,EX
+FD 2A ""                                                                      LOA ~~,FX
+FD 2B ""                                                                      LOA ~~,GX
+FD 2C ""                                                                      LOA ~~,HX
+FD 2D ""                                                                      LOA ~~,AL
+FD 2E ""                                                                      LOA ~~,BL
+FD 2F ""                                                                      LOA ~~,CL
+FD 30 ""                                                                      LOA ~~,DL
+FD 31 ""                                                                      LOA ~~,EL
+FD 32 ""                                                                      LOA ~~,FL
+FD 33 ""                                                                      LOA ~~,GL
+FD 34 ""                                                                      LOA ~~,HL
+FD 35 ""                                                                      LOA ~~,AT
+FD 36 ""                                                                      LOA ~~,AE
 FD 37                                                                         LOA (AX),AX
 FD 38                                                                         LOA (AX),BX
 FD 39                                                                         LOA (AX),CX
@@ -356,8 +356,8 @@ FD 65 ""                                                                      OR
 FD 66 ""                                                                      ORR FX,#""
 FD 67 ""                                                                      ORR GX,#""
 FD 68 ""                                                                      ORR HX,#""
-FD 69 ""                                                                      ORR AX,""
-FD 6A ""                                                                      ORR AL,""
+FD 69 ""                                                                      ORR AX,~~
+FD 6A ""                                                                      ORR AL,~~
 FD 6B                                                                         ORR AL,AL
 FD 6C                                                                         ORR AL,BL
 FD 6D                                                                         ORR AL,CL
@@ -391,8 +391,8 @@ FD 88 ""                                                                      XO
 FD 89 ""                                                                      XOR FX,#""
 FD 8A ""                                                                      XOR GX,#""
 FD 8B ""                                                                      XOR HX,#""
-FD 8C ""                                                                      XOR AX,""
-FD 8D ""                                                                      XOR AL,""
+FD 8C ""                                                                      XOR AX,~~
+FD 8D ""                                                                      XOR AL,~~
 FD 8E                                                                         XOR AL,AL
 FD 8F                                                                         XOR AL,BL
 FD 90                                                                         XOR AL,CL
@@ -449,7 +449,7 @@ FD C2                                                                         PS
 FD C3                                                                         PSH HL
 FD C4                                                                         PSH ALL
 FD C5                                                                         EXE
-FD C6 ""                                                                      ROL ""
+FD C6 ""                                                                      ROL ~~
 FD C7                                                                         ROL AL
 FD C8                                                                         ROL BL
 FD C9                                                                         ROL CL
@@ -467,7 +467,7 @@ FD D4                                                                         RO
 FD D5                                                                         ROL GX
 FD D6                                                                         ROL HX
 FD D7                                                                         ROL (AX)
-FD D8 ""                                                                      ROR ""
+FD D8 ""                                                                      ROR ~~
 FD D9                                                                         ROR AL
 FD DA                                                                         ROR BL
 FD DB                                                                         ROR CL
@@ -485,7 +485,7 @@ FD E6                                                                         RO
 FD E7                                                                         ROR GX
 FD E8                                                                         ROR HX
 FD E9                                                                         ROR (AX)
-FD EA ""                                                                      RLC ""
+FD EA ""                                                                      RLC ~~
 FD EB                                                                         RLC AL
 FD EC                                                                         RLC BL
 FD ED                                                                         RLC CL
@@ -503,7 +503,7 @@ FD F8                                                                         RL
 FD F9                                                                         RLC GX
 FD FA                                                                         RLC HX
 FD FB                                                                         RLC (AX)
-FD FC ""                                                                      RRC ""
+FD FC ""                                                                      RRC ~~
 FD FD                                                                         RRC AL
 FD FE                                                                         RRC BL
 FD FF                                                                         RRC CL
@@ -521,7 +521,7 @@ FE 0A                                                                         RR
 FE 0B                                                                         RRC GX
 FE 0C                                                                         RRC HX
 FE 0D                                                                         RRC (AX)
-FE 0E ""                                                                      SHL ""
+FE 0E ""                                                                      SHL ~~
 FE 0F                                                                         SHL AL
 FE 10                                                                         SHL BL
 FE 11                                                                         SHL CL
@@ -539,7 +539,7 @@ FE 1C                                                                         SH
 FE 1D                                                                         SHL GX
 FE 1E                                                                         SHL HX
 FE 1F                                                                         SHL (AX)
-FE 20 ""                                                                      SHR ""
+FE 20 ""                                                                      SHR ~~
 FE 21                                                                         SHR AL
 FE 22                                                                         SHR BL
 FE 23                                                                         SHR CL

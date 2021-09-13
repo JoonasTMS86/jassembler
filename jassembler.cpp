@@ -431,7 +431,7 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 		valueNotDefined = true;
 		nameFoundAtLine = "";
 		int pos = origPos;
-		while(loadedFile[pos] > 32)
+		while(loadedFile[pos] != 10 && loadedFile[pos] != 13 && loadedFile[pos] != 32 && loadedFile[pos] != ',' && loadedFile[pos] != ';')
 		{
 			nameFoundAtLine = nameFoundAtLine + loadedFile[pos];
 			pos++;
@@ -939,6 +939,33 @@ loadedFile[sourceLineOffset] != 32)
 							}
 						}
 					}
+					else if(isaFile[isaMnemonicPos] == '~')
+					{
+						// Value in source file is a 64-bit relative value.
+						isaMnemonicPos += 2;
+						sourceLineOffset = evaluateExpression(sourceLineOffset);
+						if(byte0 == -1)
+						{
+							if(cError != errVALUEOUTOFRANGE) cError = errVALUENOTDEFINED;
+							push();
+						}
+						else
+						{
+							int relativeJumpValue = numericValue - CPUAddress;
+							byte0 = relativeJumpValue & 0xFF;
+							byte1 = (relativeJumpValue >> 8) & 0xFF;
+							byte2 = (relativeJumpValue >> 16) & 0xFF;
+							byte3 = (relativeJumpValue >> 24) & 0xFF;
+							if(relativeJumpValue < 0)
+							{
+								byte4 = 0xFF;
+								byte5 = 0xFF;
+								byte6 = 0xFF;
+								byte7 = 0xFF;
+							}
+							push();
+						}
+					}
 					else
 					{
 						nextLineOfIsaFile();
@@ -999,7 +1026,7 @@ int main(int argc, char **argv)
 {
 	if(argc < 2)
 	{
-		cout << "JAssembler v0.3" << endl;
+		cout << "JAssembler v0.4" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
