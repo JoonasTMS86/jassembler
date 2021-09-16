@@ -1284,11 +1284,11 @@ int main(int argc, char **argv)
 			}
 		}
 		currentFile = errorCollection[0];
-		int hixahaxaValues[1000];
+		int alreadyShownErrors[1000];
 		for(int offset = 0; offset < howManyDistinctFiles; offset++)
 		{
-			int hixahaxamany = 1;
-			hixahaxaValues[0] = 0;
+			int alreadyShownErrorsSize = 1;
+			alreadyShownErrors[0] = 0;
 			currentFile = errorCollection[offset];
 			cout << endl << "In " << fileNames[currentFile] << ":" << endl;
 			for(int pos = 0; pos < numberOfErrors; pos++)
@@ -1296,18 +1296,18 @@ int main(int argc, char **argv)
 				if(errorFileNumbers[pos] == currentFile)
 				{
 					bool notNew = false;
-					for(int hixhaxpos = 0; hixhaxpos < hixahaxamany; hixhaxpos++)
+					for(int pos = 0; pos < alreadyShownErrorsSize; pos++)
 					{
-						if(errorLineNumbers[pos] == hixahaxaValues[hixhaxpos])
+						if(errorLineNumbers[pos] == alreadyShownErrors[pos])
 						{
 							notNew = true;
-							hixhaxpos = hixahaxamany;
+							pos = alreadyShownErrorsSize;
 						}
 					}
 					if(!notNew)
 					{
-						hixahaxaValues[(hixahaxamany - 1)] = errorLineNumbers[pos];
-						hixahaxamany++;
+						alreadyShownErrors[(alreadyShownErrorsSize - 1)] = errorLineNumbers[pos];
+						alreadyShownErrorsSize++;
 						switch(errorIds[pos])
 						{
 							case 0:
