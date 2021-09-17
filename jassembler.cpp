@@ -8,6 +8,8 @@
 #define errUNKNOWNDIRECTIVE 14
 #define errFILEINCLUDEERROR 15
 #define errINVALIDFILLNUMBER 16
+#define errCANTINCLUDEITSELF 17
+#define errVARIABLEALREADYDEFINED 18
 
 #include <iostream>
 #include <fstream>
@@ -44,9 +46,11 @@ bool instructionFound;
 int numericValue;
 int CPUAddress; // Current address of CPU. Its value can be changed with the ORG directive.
 string lineContent;
-int variablesSize = 0;
+int variablesSize = 0; // How many variable definitions have been found
+int variablesPos; // Current pos in variable definitions
 string variableNames[1000000];
 int variableValues[1000000];
+int variablesDefinedNTimes[1000000];
 string nameFoundAtLine;
 bool valueNotDefined;
 bool possibleError;
@@ -742,45 +746,54 @@ void processDirective(string directive)
 		ifstream srcToLoad(srcToLoadName, ios::in|ios::binary|ios::ate);
 		if(srcToLoad)
 		{
-
 			bool notFound = true;
+			bool srcIncludeError = false;
 			for(int pos = 0; pos < filenamePointer; pos++)
 			{
 				if(fileNames[pos] == srcToLoadName)
 				{
-					notFound = false;
-					currentFilePointer = pos;
-					string thisname = fileNames[pos];
-					int i = 0;
-					while(i < thisname.length())
+					if(pos == currentFilePointer)
 					{
-						srcToLoadName[i] = thisname[i];
-						i++;
+						addError(errCANTINCLUDEITSELF);
+						srcIncludeError = true;
+						srcToLoad.close();
+						pos = filenamePointer;
 					}
-					srcToLoadName[i] = 0;
-					pos = filenamePointer;
+					else
+					{
+						notFound = false;
+						currentFilePointer = pos;
+						string thisname = fileNames[pos];
+						int i = 0;
+						while(i < thisname.length())
+						{
+							srcToLoadName[i] = thisname[i];
+							i++;
+						}
+						srcToLoadName[i] = 0;
+						pos = filenamePointer;
+					}
 				}
 			}
-			if(notFound)
+			if(!srcIncludeError)
 			{
-				currentFilePointer = filenamePointer;
-				fileNames[filenamePointer] = srcToLoadName;
-				filenamePointer++;
+				if(notFound)
+				{
+					currentFilePointer = filenamePointer;
+					fileNames[filenamePointer] = srcToLoadName;
+					filenamePointer++;
+				}
+				nestedLevel++;
+				posAlreadySet = true;
+				currentFileStack[nestedLevel] = currentFilePointer;
+				loadedFile[currentFilePointer] = (char*) malloc(1920138);
+				loadedSize[currentFilePointer] = srcToLoad.tellg();
+				srcToLoad.seekg (0, ios::beg);
+				srcToLoad.read (loadedFile[currentFilePointer], loadedSize[currentFilePointer]);
+				srcToLoad.close();
+				currentLine[currentFilePointer] = 1;
+				sourcePos[currentFilePointer] = 0;
 			}
-
-			nestedLevel++;
-			posAlreadySet = true;
-
-			currentFileStack[nestedLevel] = currentFilePointer;
-
-			loadedFile[currentFilePointer] = (char*) malloc(1920138);
-			loadedSize[currentFilePointer] = srcToLoad.tellg();
-			srcToLoad.seekg (0, ios::beg);
-			srcToLoad.read (loadedFile[currentFilePointer], loadedSize[currentFilePointer]);
-			srcToLoad.close();
-
-			currentLine[currentFilePointer] = 1;
-			sourcePos[currentFilePointer] = 0;
 		}
 		else
 		{
@@ -798,6 +811,11 @@ void processDirective(string directive)
 
 void assemble()
 {
+	for(int i = 0; i < variablesSize; i++)
+	{
+		variablesDefinedNTimes[i] = 0;
+	}
+	variablesPos = 0;
 	filenamePointer = 1;
 	nestedLevel = 0;
 	posAlreadySet = false;
@@ -826,24 +844,24 @@ void assemble()
 			invalidValueFindAlternativeInstruction = false;
 			instructionFound = false;
 			int checkOffset = sourceLineOffset[currentFilePointer];
-			bool isExpression = false;
+			bool isVariableDefinition = false;
 			while(checkOffset < loadedSize[currentFilePointer] && loadedFile[currentFilePointer][checkOffset] != 10 && loadedFile[currentFilePointer][checkOffset] != 13)
 			{
 				if(loadedFile[currentFilePointer][checkOffset] == '=')
 				{
-					isExpression = true;
+					isVariableDefinition = true;
 					break;
 				}
 				checkOffset++;
 			}
-			// Make sure the '=' really signifies expression by checking whether it is preceded by a comment character.
-			if(isExpression)
+			// Make sure the '=' really signifies a variable definition by checking whether it is preceded by a comment character.
+			if(isVariableDefinition)
 			{
 				while(checkOffset > (backToThisOffset - 1))
 				{
 					if(loadedFile[currentFilePointer][checkOffset] == ';')
 					{
-						isExpression = false;
+						isVariableDefinition = false;
 						break;
 					}
 					checkOffset--;
@@ -851,27 +869,39 @@ void assemble()
 			}
 			if(loadedFile[currentFilePointer][backToThisOffset] == 10 || loadedFile[currentFilePointer][backToThisOffset] == 13)
 			{
-				isExpression = false;
+				isVariableDefinition = false;
 				checkingSourceInstruction = false;
 			}
-			if(isExpression)
+			if(isVariableDefinition)
 			{
-				if(passes == 0)
+				checkOffset = sourceLineOffset[currentFilePointer];
+				string nameToAdd = "";
+				while(loadedFile[currentFilePointer][checkOffset] > 32 && loadedFile[currentFilePointer][checkOffset] != '=')
 				{
-					checkOffset = sourceLineOffset[currentFilePointer];
-					string nameToAdd = "";
-					while(loadedFile[currentFilePointer][checkOffset] > 32 && loadedFile[currentFilePointer][checkOffset] != '=')
-					{
-						nameToAdd = nameToAdd + loadedFile[currentFilePointer][checkOffset];
-						checkOffset++;
-					}
-					while(loadedFile[currentFilePointer][checkOffset] != '=') checkOffset++;
+					nameToAdd = nameToAdd + loadedFile[currentFilePointer][checkOffset];
 					checkOffset++;
-					while(loadedFile[currentFilePointer][checkOffset] <= 32) checkOffset++;
-					checkOffset = evaluateExpression(checkOffset);
-					variableNames[variablesSize] = nameToAdd;
-					variableValues[variablesSize] = numericValue;
-					variablesSize++;
+				}
+				while(loadedFile[currentFilePointer][checkOffset] != '=') checkOffset++;
+				checkOffset++;
+				while(loadedFile[currentFilePointer][checkOffset] <= 32) checkOffset++;
+				checkOffset = evaluateExpression(checkOffset);
+				bool existAlready = false;
+				for(int i = 0; i < variablesSize; i++)
+				{
+					if(variableNames[i] == nameToAdd && variablesDefinedNTimes[i] > 0)
+					{
+						existAlready = true;
+						addError(errVARIABLEALREADYDEFINED);
+						break;
+					}
+				}
+				if(!existAlready)
+				{
+					variablesDefinedNTimes[variablesPos] = 1;
+					variableNames[variablesPos] = nameToAdd;
+					variableValues[variablesPos] = numericValue;
+					variablesPos++;
+					if(passes == 0) variablesSize++;
 					possibleError = false;
 				}
 			}
@@ -1287,7 +1317,7 @@ int main(int argc, char **argv)
 		int alreadyShownErrors[1000];
 		for(int offset = 0; offset < howManyDistinctFiles; offset++)
 		{
-			int alreadyShownErrorsSize = 1;
+			int alreadyShownErrorsSize = 0;
 			alreadyShownErrors[0] = 0;
 			currentFile = errorCollection[offset];
 			cout << endl << "In " << fileNames[currentFile] << ":" << endl;
@@ -1296,17 +1326,17 @@ int main(int argc, char **argv)
 				if(errorFileNumbers[pos] == currentFile)
 				{
 					bool notNew = false;
-					for(int pos = 0; pos < alreadyShownErrorsSize; pos++)
+					for(int cpos = 0; cpos < alreadyShownErrorsSize; cpos++)
 					{
-						if(errorLineNumbers[pos] == alreadyShownErrors[pos])
+						if(errorLineNumbers[pos] == alreadyShownErrors[cpos])
 						{
 							notNew = true;
-							pos = alreadyShownErrorsSize;
+							cpos = alreadyShownErrorsSize;
 						}
 					}
 					if(!notNew)
 					{
-						alreadyShownErrors[(alreadyShownErrorsSize - 1)] = errorLineNumbers[pos];
+						alreadyShownErrors[alreadyShownErrorsSize] = errorLineNumbers[pos];
 						alreadyShownErrorsSize++;
 						switch(errorIds[pos])
 						{
@@ -1341,6 +1371,12 @@ int main(int argc, char **argv)
 								break;
 							case errINVALIDFILLNUMBER:
 								error(errorLineNumbers[pos], "Parameter 1 for fill must be 0 or greater");
+								break;
+							case errCANTINCLUDEITSELF:
+								error(errorLineNumbers[pos], "Can't include currently open file");
+								break;
+							case errVARIABLEALREADYDEFINED:
+								error(errorLineNumbers[pos], "Variable already defined");
 								break;
 						}
 					}
