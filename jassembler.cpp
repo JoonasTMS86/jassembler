@@ -1314,11 +1314,12 @@ int main(int argc, char **argv)
 			}
 		}
 		currentFile = errorCollection[0];
-		int alreadyShownErrors[1000];
+		int alreadyShownErrorsLines[1000];
+		int alreadyShownErrorsTypes[1000];
 		for(int offset = 0; offset < howManyDistinctFiles; offset++)
 		{
 			int alreadyShownErrorsSize = 0;
-			alreadyShownErrors[0] = 0;
+			alreadyShownErrorsLines[0] = 0;
 			currentFile = errorCollection[offset];
 			cout << endl << "In " << fileNames[currentFile] << ":" << endl;
 			for(int pos = 0; pos < numberOfErrors; pos++)
@@ -1328,7 +1329,7 @@ int main(int argc, char **argv)
 					bool notNew = false;
 					for(int cpos = 0; cpos < alreadyShownErrorsSize; cpos++)
 					{
-						if(errorLineNumbers[pos] == alreadyShownErrors[cpos])
+						if(errorLineNumbers[pos] == alreadyShownErrorsLines[cpos])
 						{
 							notNew = true;
 							cpos = alreadyShownErrorsSize;
@@ -1336,50 +1337,70 @@ int main(int argc, char **argv)
 					}
 					if(!notNew)
 					{
-						alreadyShownErrors[alreadyShownErrorsSize] = errorLineNumbers[pos];
+						alreadyShownErrorsLines[alreadyShownErrorsSize] = errorLineNumbers[pos];
+						alreadyShownErrorsTypes[alreadyShownErrorsSize] = errorIds[pos];
 						alreadyShownErrorsSize++;
-						switch(errorIds[pos])
-						{
-							case 0:
-								break;
-							case errUNKNOWNINSTRUCTION:
-								error(errorLineNumbers[pos], "Unknown instruction");
-								break;
-							case err8BITVALUEOUTOFRANGE:
-								error(errorLineNumbers[pos], "Value out of range - 8-bit value expected");
-								break;
-							case err16BITVALUEOUTOFRANGE:
-								error(errorLineNumbers[pos], "Value out of range - 16-bit value expected");
-								break;
-							case errBRANCHOUTOFRANGE:
-								error(errorLineNumbers[pos], "Target address out of range");
-								break;
-							case errSYNTAXERROR:
-								error(errorLineNumbers[pos], "Syntax error");
-								break;
-							case errENDOFFILE:
-								error(errorLineNumbers[pos], "Unexpected end of file");
-								break;
-							case errVALUENOTDEFINED:
-								error(errorLineNumbers[pos], "Value not defined");
-								break;
-							case errUNKNOWNDIRECTIVE:
-								error(errorLineNumbers[pos], "Unknown Assembler directive");
-								break;
-							case errFILEINCLUDEERROR:
-								error(errorLineNumbers[pos], "File not found or other file error");
-								break;
-							case errINVALIDFILLNUMBER:
-								error(errorLineNumbers[pos], "Parameter 1 for fill must be 0 or greater");
-								break;
-							case errCANTINCLUDEITSELF:
-								error(errorLineNumbers[pos], "Can't include currently open file");
-								break;
-							case errVARIABLEALREADYDEFINED:
-								error(errorLineNumbers[pos], "Variable already defined");
-								break;
-						}
+
 					}
+				}
+			}
+			// Sort the errors to make sure that they are in ascending order, starting from the lowest line number.
+			for(int errpos = 0; errpos < (alreadyShownErrorsSize - 1); errpos++)
+			{
+				int other = errpos + 1;
+				while(other < alreadyShownErrorsSize)
+				{
+					if(alreadyShownErrorsLines[errpos] > alreadyShownErrorsLines[other])
+					{
+						int store = alreadyShownErrorsLines[errpos];
+						alreadyShownErrorsLines[errpos] = alreadyShownErrorsLines[other];
+						alreadyShownErrorsLines[other] = store;
+					}
+					other++;
+				}
+			}
+			for(int pos = 0; pos < alreadyShownErrorsSize; pos++)
+			{
+				switch(alreadyShownErrorsTypes[pos])
+				{
+					case 0:
+						break;
+					case errUNKNOWNINSTRUCTION:
+						error(alreadyShownErrorsLines[pos], "Unknown instruction");
+						break;
+					case err8BITVALUEOUTOFRANGE:
+						error(alreadyShownErrorsLines[pos], "Value out of range - 8-bit value expected");
+						break;
+					case err16BITVALUEOUTOFRANGE:
+						error(alreadyShownErrorsLines[pos], "Value out of range - 16-bit value expected");
+						break;
+					case errBRANCHOUTOFRANGE:
+						error(alreadyShownErrorsLines[pos], "Target address out of range");
+						break;
+					case errSYNTAXERROR:
+						error(alreadyShownErrorsLines[pos], "Syntax error");
+						break;
+					case errENDOFFILE:
+						error(alreadyShownErrorsLines[pos], "Unexpected end of file");
+						break;
+					case errVALUENOTDEFINED:
+						error(alreadyShownErrorsLines[pos], "Value not defined");
+						break;
+					case errUNKNOWNDIRECTIVE:
+						error(alreadyShownErrorsLines[pos], "Unknown Assembler directive");
+						break;
+					case errFILEINCLUDEERROR:
+						error(alreadyShownErrorsLines[pos], "File not found or other file error");
+						break;
+					case errINVALIDFILLNUMBER:
+						error(alreadyShownErrorsLines[pos], "Parameter 1 for fill must be 0 or greater");
+						break;
+					case errCANTINCLUDEITSELF:
+						error(alreadyShownErrorsLines[pos], "Can't include currently open file");
+						break;
+					case errVARIABLEALREADYDEFINED:
+						error(alreadyShownErrorsLines[pos], "Variable already defined");
+						break;
 				}
 			}
 		}
