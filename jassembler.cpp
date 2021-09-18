@@ -1217,7 +1217,7 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		cout << endl;
-		cout << "JAssembler v0.8" << endl;
+		cout << "JAssembler v0.9" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
@@ -1355,6 +1355,9 @@ int main(int argc, char **argv)
 						int store = alreadyShownErrorsLines[errpos];
 						alreadyShownErrorsLines[errpos] = alreadyShownErrorsLines[other];
 						alreadyShownErrorsLines[other] = store;
+						store = alreadyShownErrorsTypes[errpos];
+						alreadyShownErrorsTypes[errpos] = alreadyShownErrorsTypes[other];
+						alreadyShownErrorsTypes[other] = store;
 					}
 					other++;
 				}
