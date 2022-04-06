@@ -158,70 +158,70 @@
 9D                                                                            BLT (AX),BX,(CX)
 9E ""                                                                         JMP ~~
 9F ""                                                                         JMP N,~~
-A0 ""                                                                         JMP 6,~~
-A1 ""                                                                         JMP 5,~~
-A2 ""                                                                         JMP 4,~~
-A3 ""                                                                         JMP 3,~~
-A4 ""                                                                         JMP 2,~~
+A0 ""                                                                         JMP I,~~
+A1 ""                                                                         JMP J,~~
+A2 ""                                                                         JMP K,~~
+A3 ""                                                                         JMP L,~~
+A4 ""                                                                         JMP M,~~
 A5 ""                                                                         JMP Z,~~
 A6 ""                                                                         JMP C,~~
 A7 ""                                                                         JMP NN,~~
-A8 ""                                                                         JMP N6,~~
-A9 ""                                                                         JMP N5,~~
-AA ""                                                                         JMP N4,~~
-AB ""                                                                         JMP N3,~~
-AC ""                                                                         JMP N2,~~
+A8 ""                                                                         JMP NI,~~
+A9 ""                                                                         JMP NJ,~~
+AA ""                                                                         JMP NK,~~
+AB ""                                                                         JMP NL,~~
+AC ""                                                                         JMP NM,~~
 AD ""                                                                         JMP NZ,~~
 AE ""                                                                         JMP NC,~~
 AF                                                                            JMP (AX)
 B0                                                                            JMP N,(AX)
-B1                                                                            JMP 6,(AX)
-B2                                                                            JMP 5,(AX)
-B3                                                                            JMP 4,(AX)
-B4                                                                            JMP 3,(AX)
-B5                                                                            JMP 2,(AX)
+B1                                                                            JMP I,(AX)
+B2                                                                            JMP J,(AX)
+B3                                                                            JMP K,(AX)
+B4                                                                            JMP L,(AX)
+B5                                                                            JMP M,(AX)
 B6                                                                            JMP Z,(AX)
 B7                                                                            JMP C,(AX)
 B8                                                                            JMP NN,(AX)
-B9                                                                            JMP N6,(AX)
-BA                                                                            JMP N5,(AX)
-BB                                                                            JMP N4,(AX)
-BC                                                                            JMP N3,(AX)
-BD                                                                            JMP N2,(AX)
+B9                                                                            JMP NI,(AX)
+BA                                                                            JMP NJ,(AX)
+BB                                                                            JMP NK,(AX)
+BC                                                                            JMP NL,(AX)
+BD                                                                            JMP NM,(AX)
 BE                                                                            JMP NZ,(AX)
 BF                                                                            JMP NC,(AX)
 C0 ""                                                                         JSR ~~
 C1 ""                                                                         JSR N,~~
-C2 ""                                                                         JSR 6,~~
-C3 ""                                                                         JSR 5,~~
-C4 ""                                                                         JSR 4,~~
-C5 ""                                                                         JSR 3,~~
-C6 ""                                                                         JSR 2,~~
+C2 ""                                                                         JSR I,~~
+C3 ""                                                                         JSR J,~~
+C4 ""                                                                         JSR K,~~
+C5 ""                                                                         JSR L,~~
+C6 ""                                                                         JSR M,~~
 C7 ""                                                                         JSR Z,~~
 C8 ""                                                                         JSR C,~~
 C9 ""                                                                         JSR NN,~~
-CA ""                                                                         JSR N6,~~
-CB ""                                                                         JSR N5,~~
-CC ""                                                                         JSR N4,~~
-CD ""                                                                         JSR N3,~~
-CE ""                                                                         JSR N2,~~
+CA ""                                                                         JSR NI,~~
+CB ""                                                                         JSR NJ,~~
+CC ""                                                                         JSR NK,~~
+CD ""                                                                         JSR NL,~~
+CE ""                                                                         JSR NM,~~
 CF ""                                                                         JSR NZ,~~
 D0 ""                                                                         JSR NC,~~
 D1                                                                            JSR (AX)
 D2                                                                            JSR N,(AX)
-D3                                                                            JSR 6,(AX)
-D4                                                                            JSR 5,(AX)
-D5                                                                            JSR 4,(AX)
-D6                                                                            JSR 3,(AX)
-D7                                                                            JSR 2,(AX)
+D3                                                                            JSR I,(AX)
+D4                                                                            JSR J,(AX)
+D5                                                                            JSR K,(AX)
+D6                                                                            JSR L,(AX)
+D7                                                                            JSR M,(AX)
 D8                                                                            JSR Z,(AX)
 D9                                                                            JSR C,(AX)
 DA                                                                            JSR NN,(AX)
-DB                                                                            JSR N6,(AX)
-DC                                                                            JSR N5,(AX)
-DD                                                                            JSR N4,(AX)
-DE                                                                            JSR N3,(AX)
-DF                                                                            JSR N2,(AX)
+DB                                                                            JSR NI,(AX)
+DC                                                                            JSR NJ,(AX)
+DD                                                                            JSR NK,(AX)
+DE                                                                            JSR NL,(AX)
+DF                                                                            JSR NM,(AX)
 E0                                                                            JSR NZ,(AX)
 E1                                                                            JSR NC,(AX)
 E2 !!                                                                         LOA AL,#!!
@@ -598,70 +598,70 @@ FF 9C "" "" ""                                                                FB
 FF 9D                                                                         FBLT (AX),BX,(CX)
 FF 9E ""                                                                      FJMP ""
 FF 9F ""                                                                      FJMP N,""
-FF A0 ""                                                                      FJMP 6,""
-FF A1 ""                                                                      FJMP 5,""
-FF A2 ""                                                                      FJMP 4,""
-FF A3 ""                                                                      FJMP 3,""
-FF A4 ""                                                                      FJMP 2,""
+FF A0 ""                                                                      FJMP I,""
+FF A1 ""                                                                      FJMP J,""
+FF A2 ""                                                                      FJMP K,""
+FF A3 ""                                                                      FJMP L,""
+FF A4 ""                                                                      FJMP M,""
 FF A5 ""                                                                      FJMP Z,""
 FF A6 ""                                                                      FJMP C,""
 FF A7 ""                                                                      FJMP NN,""
-FF A8 ""                                                                      FJMP N6,""
-FF A9 ""                                                                      FJMP N5,""
-FF AA ""                                                                      FJMP N4,""
-FF AB ""                                                                      FJMP N3,""
-FF AC ""                                                                      FJMP N2,""
+FF A8 ""                                                                      FJMP NI,""
+FF A9 ""                                                                      FJMP NJ,""
+FF AA ""                                                                      FJMP NK,""
+FF AB ""                                                                      FJMP NL,""
+FF AC ""                                                                      FJMP NM,""
 FF AD ""                                                                      FJMP NZ,""
 FF AE ""                                                                      FJMP NC,""
 FF AF                                                                         FJMP (AX)
 FF B0                                                                         FJMP N,(AX)
-FF B1                                                                         FJMP 6,(AX)
-FF B2                                                                         FJMP 5,(AX)
-FF B3                                                                         FJMP 4,(AX)
-FF B4                                                                         FJMP 3,(AX)
-FF B5                                                                         FJMP 2,(AX)
+FF B1                                                                         FJMP I,(AX)
+FF B2                                                                         FJMP J,(AX)
+FF B3                                                                         FJMP K,(AX)
+FF B4                                                                         FJMP L,(AX)
+FF B5                                                                         FJMP M,(AX)
 FF B6                                                                         FJMP Z,(AX)
 FF B7                                                                         FJMP C,(AX)
 FF B8                                                                         FJMP NN,(AX)
-FF B9                                                                         FJMP N6,(AX)
-FF BA                                                                         FJMP N5,(AX)
-FF BB                                                                         FJMP N4,(AX)
-FF BC                                                                         FJMP N3,(AX)
-FF BD                                                                         FJMP N2,(AX)
+FF B9                                                                         FJMP NI,(AX)
+FF BA                                                                         FJMP NJ,(AX)
+FF BB                                                                         FJMP NK,(AX)
+FF BC                                                                         FJMP NL,(AX)
+FF BD                                                                         FJMP NM,(AX)
 FF BE                                                                         FJMP NZ,(AX)
 FF BF                                                                         FJMP NC,(AX)
 FF C0 ""                                                                      FJSR ""
 FF C1 ""                                                                      FJSR N,""
-FF C2 ""                                                                      FJSR 6,""
-FF C3 ""                                                                      FJSR 5,""
-FF C4 ""                                                                      FJSR 4,""
-FF C5 ""                                                                      FJSR 3,""
-FF C6 ""                                                                      FJSR 2,""
+FF C2 ""                                                                      FJSR I,""
+FF C3 ""                                                                      FJSR J,""
+FF C4 ""                                                                      FJSR K,""
+FF C5 ""                                                                      FJSR L,""
+FF C6 ""                                                                      FJSR M,""
 FF C7 ""                                                                      FJSR Z,""
 FF C8 ""                                                                      FJSR C,""
 FF C9 ""                                                                      FJSR NN,""
-FF CA ""                                                                      FJSR N6,""
-FF CB ""                                                                      FJSR N5,""
-FF CC ""                                                                      FJSR N4,""
-FF CD ""                                                                      FJSR N3,""
-FF CE ""                                                                      FJSR N2,""
+FF CA ""                                                                      FJSR NI,""
+FF CB ""                                                                      FJSR NJ,""
+FF CC ""                                                                      FJSR NK,""
+FF CD ""                                                                      FJSR NL,""
+FF CE ""                                                                      FJSR NM,""
 FF CF ""                                                                      FJSR NZ,""
 FF D0 ""                                                                      FJSR NC,""
 FF D1                                                                         FJSR (AX)
 FF D2                                                                         FJSR N,(AX)
-FF D3                                                                         FJSR 6,(AX)
-FF D4                                                                         FJSR 5,(AX)
-FF D5                                                                         FJSR 4,(AX)
-FF D6                                                                         FJSR 3,(AX)
-FF D7                                                                         FJSR 2,(AX)
+FF D3                                                                         FJSR I,(AX)
+FF D4                                                                         FJSR J,(AX)
+FF D5                                                                         FJSR K,(AX)
+FF D6                                                                         FJSR L,(AX)
+FF D7                                                                         FJSR M,(AX)
 FF D8                                                                         FJSR Z,(AX)
 FF D9                                                                         FJSR C,(AX)
 FF DA                                                                         FJSR NN,(AX)
-FF DB                                                                         FJSR N6,(AX)
-FF DC                                                                         FJSR N5,(AX)
-FF DD                                                                         FJSR N4,(AX)
-FF DE                                                                         FJSR N3,(AX)
-FF DF                                                                         FJSR N2,(AX)
+FF DB                                                                         FJSR NI,(AX)
+FF DC                                                                         FJSR NJ,(AX)
+FF DD                                                                         FJSR NK,(AX)
+FF DE                                                                         FJSR NL,(AX)
+FF DF                                                                         FJSR NM,(AX)
 FF E0                                                                         FJSR NZ,(AX)
 FF E1                                                                         FJSR NC,(AX)
 FF F2 ""                                                                      FLOA AX,""

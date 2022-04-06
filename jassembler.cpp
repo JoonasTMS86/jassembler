@@ -17,6 +17,9 @@
 
 using namespace std;
 
+string ReservedWords[1000000];
+int ReservedWordsSize = 0;
+
 char * loadedFile[1000000];
 char * isaFile = (char*) malloc(1920138);
 char * savedFile = (char*) malloc(1920138);
@@ -809,6 +812,52 @@ void processDirective(string directive)
 	}
 }
 
+
+
+
+
+
+
+
+bool validVariable()
+{
+	int checkpos = sourceLineOffset[currentFilePointer];
+	bool varIsValid = true;
+	string varName = "";
+	if(loadedFile[currentFilePointer][checkpos] == '(') checkpos++;
+	while(loadedFile[currentFilePointer][checkpos] != 10 && loadedFile[currentFilePointer][checkpos] != 13 && loadedFile[currentFilePointer][checkpos] != ';' && checkpos < loadedSize[currentFilePointer] && varIsValid == true)
+	{
+		// A valid variable name can't contain any characters that are not valid for a variable name.
+		if(loadedFile[currentFilePointer][checkpos] >= 'a' && loadedFile[currentFilePointer][checkpos] <= 'z' || loadedFile[currentFilePointer][checkpos] >= 'A' && loadedFile[currentFilePointer][checkpos] <= 'Z' || loadedFile[currentFilePointer][checkpos] >= '0' && loadedFile[currentFilePointer][checkpos] <= '9' || loadedFile[currentFilePointer][checkpos] == '_')
+		{
+			varName.append(1, loadedFile[currentFilePointer][checkpos]);
+			checkpos++;
+		}
+		else
+		{
+			varIsValid = false;
+		}
+	}
+	//cout << "varName = " << varName << endl;
+	varIsValid = true;
+	int varPos = 0;
+	while(varIsValid && varPos < ReservedWordsSize)
+	{
+		if(varName == ReservedWords[varPos])
+		{
+			//cout << "invalid variable name" << endl;
+			varIsValid = false;
+		}
+		varPos++;
+	}
+	return varIsValid;
+}
+
+
+
+
+
+
 void assemble()
 {
 	for(int i = 0; i < variablesSize; i++)
@@ -1103,29 +1152,34 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 					}
 					else if(isaFile[isaMnemonicPos] == '~')
 					{
-						// Value in source file is a 64-bit relative value.
 						isaMnemonicPos += 2;
-						sourceLineOffset[currentFilePointer] = evaluateExpression(sourceLineOffset[currentFilePointer]);
-						if(byte0 == -1)
-						{
-							addError(errVALUENOTDEFINED);
-							push();
-						}
+						//cout << "64-bit relative value expected, char at source file = " << loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] << endl;
+						// Value in source file is a 64-bit relative value.
+						if(!validVariable()) nextLineOfIsaFile();
 						else
 						{
-							int relativeJumpValue = numericValue - CPUAddress;
-							byte0 = relativeJumpValue & 0xFF;
-							byte1 = (relativeJumpValue >> 8) & 0xFF;
-							byte2 = (relativeJumpValue >> 16) & 0xFF;
-							byte3 = (relativeJumpValue >> 24) & 0xFF;
-							if(relativeJumpValue < 0)
+							sourceLineOffset[currentFilePointer] = evaluateExpression(sourceLineOffset[currentFilePointer]);
+							if(byte0 == -1)
 							{
-								byte4 = 0xFF;
-								byte5 = 0xFF;
-								byte6 = 0xFF;
-								byte7 = 0xFF;
+								addError(errVALUENOTDEFINED);
+								push();
 							}
-							push();
+							else
+							{
+								int relativeJumpValue = numericValue - CPUAddress;
+								byte0 = relativeJumpValue & 0xFF;
+								byte1 = (relativeJumpValue >> 8) & 0xFF;
+								byte2 = (relativeJumpValue >> 16) & 0xFF;
+								byte3 = (relativeJumpValue >> 24) & 0xFF;
+								if(relativeJumpValue < 0)
+								{
+									byte4 = 0xFF;
+									byte5 = 0xFF;
+									byte6 = 0xFF;
+									byte7 = 0xFF;
+								}
+								push();
+							}
 						}
 					}
 					else
@@ -1275,6 +1329,70 @@ int main(int argc, char **argv)
 		return(1);
 	}
 	sourcefile.close();
+
+	// Get all the reserved keywords.
+	int dPos = 78;
+	while(dPos < isaSize)
+	{
+		string kWord = "";
+		while(dPos < isaSize && isaFile[dPos] >= 'a' && isaFile[dPos] <= 'z' || isaFile[dPos] >= 'A' && isaFile[dPos] <= 'Z' || isaFile[dPos] >= '0' && isaFile[dPos] <= '9' || isaFile[dPos] == '_')
+		{
+			kWord.append(1, isaFile[dPos]);
+			dPos++;
+		}
+		if(ReservedWordsSize == 0)
+		{
+			ReservedWords[ReservedWordsSize] = kWord;
+			ReservedWordsSize++;
+			//cout << "kWord = " << kWord << endl;
+		}
+		else
+		{
+			bool found = false;
+			int checkpos = 0;
+			while(!found && checkpos < ReservedWordsSize)
+			{
+				if(ReservedWords[checkpos] == kWord) found = true;
+				checkpos++;
+			}
+			if(!found)
+			{
+				//cout << "new kWord = " << kWord << endl;
+				ReservedWords[ReservedWordsSize] = kWord;
+				ReservedWordsSize++;
+			}
+		}
+
+
+		// Find next alphanumeric char or line break.
+		bool charFound = false;
+		bool findChar = true;
+		while(findChar)
+		{
+			if(dPos < isaSize && isaFile[dPos] >= 'a' && isaFile[dPos] <= 'z' || isaFile[dPos] >= 'A' && isaFile[dPos] <= 'Z' || isaFile[dPos] >= '0' && isaFile[dPos] <= '9' || isaFile[dPos] == '_')
+			{
+				charFound = true;
+				findChar = false;
+				dPos--;
+			}
+			if(isaFile[dPos] == 13 || isaFile[dPos] == 10)
+			{
+				findChar = false;
+				if(isaFile[dPos + 1] == 10) dPos++;
+			}
+			dPos++;
+		}
+
+		if(!charFound) dPos += 78;
+
+
+
+	}
+
+	//cout << "ReservedWordsSize = " << ReservedWordsSize << endl;
+
+
+
 	// Here we start assembling the source file into binary.
 	passes = 0;
 	assemble();
