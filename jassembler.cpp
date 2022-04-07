@@ -1277,7 +1277,7 @@ int main(int argc, char **argv)
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
-		cout << "(C) 2021 Joonas Lindberg (The Mad Scientist)" << endl;
+		cout << "(C) 2021 - 2022 Joonas Lindberg (The Mad Scientist)" << endl;
 		cout << endl;
 		cout << "Usage: jassembler instructionsetfile sourcefile targetfile" << endl;
 		free (loadedFile[currentFilePointer]);
