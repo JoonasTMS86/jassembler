@@ -827,10 +827,12 @@ bool validVariable()
 	if(loadedFile[currentFilePointer][checkpos] == '(') checkpos++;
 	while(loadedFile[currentFilePointer][checkpos] != 10 && loadedFile[currentFilePointer][checkpos] != 13 && loadedFile[currentFilePointer][checkpos] != ';' && checkpos < loadedSize[currentFilePointer] && varIsValid == true)
 	{
-		// A valid variable name can't contain any characters that are not valid for a variable name.
+		// A valid variable name cannot be any reserved Assembler keyword.
 		if(loadedFile[currentFilePointer][checkpos] >= 'a' && loadedFile[currentFilePointer][checkpos] <= 'z' || loadedFile[currentFilePointer][checkpos] >= 'A' && loadedFile[currentFilePointer][checkpos] <= 'Z' || loadedFile[currentFilePointer][checkpos] >= '0' && loadedFile[currentFilePointer][checkpos] <= '9' || loadedFile[currentFilePointer][checkpos] == '_')
 		{
-			varName.append(1, loadedFile[currentFilePointer][checkpos]);
+			int actualchar = loadedFile[currentFilePointer][checkpos];
+			if(actualchar >= 'a' && actualchar <= 'z') actualchar -= 32;
+			varName.append(1, actualchar);
 			checkpos++;
 		}
 		else
