@@ -21,4 +21,4 @@ To assemble the included example 6502 ASM source to a 6502 binary, use:
 
 JAssembler is a Work-In-Progress project. My initial goal was to create a program with which I can assemble some JISA source into JISA binary programs, so that I can use them in my website - it is in my plans to make my own JISA Virtual Machine to my website which executes JISA code. Many features, such as expressions, are not supported yet. I shall implement missing features in future versions of JAssembler.
 
-2021 Joonas Lindberg, The Mad Scientist
+2021 - 2025 Joonas Lindberg, The Mad Scientist
