@@ -17,6 +17,8 @@
 
 using namespace std;
 
+bool CPUinitialAddressSet = false;
+
 string ReservedWords[1000000];
 int ReservedWordsSize = 0;
 
@@ -468,7 +470,7 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 		valueNotDefined = true;
 		nameFoundAtLine = "";
 		int pos = origPos;
-		while(loadedFile[currentFilePointer][pos] != 10 && loadedFile[currentFilePointer][pos] != 13 && loadedFile[currentFilePointer][pos] != 32 && loadedFile[currentFilePointer][pos] != ',' && loadedFile[currentFilePointer][pos] != ';')
+		while(loadedFile[currentFilePointer][pos] != 10 && loadedFile[currentFilePointer][pos] != 13 && loadedFile[currentFilePointer][pos] != 32 && loadedFile[currentFilePointer][pos] != ',' && loadedFile[currentFilePointer][pos] != ';' && loadedFile[currentFilePointer][pos] != '(' && loadedFile[currentFilePointer][pos] != ')')
 		{
 			nameFoundAtLine = nameFoundAtLine + loadedFile[currentFilePointer][pos];
 			pos++;
@@ -562,7 +564,18 @@ void processDirective(string directive)
 	{
 		while(loadedFile[currentFilePointer][(sourceLineOffset[currentFilePointer])] <= 32) sourceLineOffset[currentFilePointer] = sourceLineOffset[currentFilePointer] + 1;
 		sourceLineOffset[currentFilePointer] = evaluateExpression(sourceLineOffset[currentFilePointer]);
+		int currAddress = CPUAddress;
 		CPUAddress = numericValue;
+		int numberOfPaddingBytes = CPUAddress - currAddress; // How many padding bytes whenever the CPU address is changed to a higher address.
+		if(CPUinitialAddressSet) {
+			for(int pos = 0; pos < numberOfPaddingBytes; pos++) {
+				savedFile[savedSize + pos] = 0;
+			}
+			savedSize += numberOfPaddingBytes;
+		}
+		else {
+			CPUinitialAddressSet = true;
+		}
 	}
 	else if(directive == "byte")
 	{
@@ -592,6 +605,8 @@ void processDirective(string directive)
 					checkingSourceInstruction = false;
 					addError(errSYNTAXERROR);
 					checking = false;
+					savedSize++;
+					CPUAddress++;
 				}
 				else
 				{
@@ -840,14 +855,12 @@ bool validVariable()
 			varIsValid = false;
 		}
 	}
-	//cout << "varName = " << varName << endl;
 	varIsValid = true;
 	int varPos = 0;
 	while(varIsValid && varPos < ReservedWordsSize)
 	{
 		if(varName == ReservedWords[varPos])
 		{
-			//cout << "invalid variable name" << endl;
 			varIsValid = false;
 		}
 		varPos++;
@@ -1089,10 +1102,6 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 							*/
 							isaMnemonicPos += 2;
 							sourceLineOffset[currentFilePointer] = evaluateExpression(sourceLineOffset[currentFilePointer]);
-							if(byte0 == -1)
-							{
-								nextLineOfIsaFile();
-							}
 							if(byte2 != 0 || byte3 != 0 || byte4 != 0 || byte5 != 0 || byte6 != 0 || byte7 != 0)
 							{
 								invalidValueFindAlternativeInstruction = true;
@@ -1124,11 +1133,7 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 							// Expecting 64-bit value in the source file.
 							isaMnemonicPos += 2;
 							sourceLineOffset[currentFilePointer] = evaluateExpression(sourceLineOffset[currentFilePointer]);
-							if(byte0 == -1)
-							{
-								nextLineOfIsaFile();
-							}
-							else push();
+							push();
 						}
 						else if(isaFile[isaMnemonicPos] == '@')
 						{
@@ -1155,7 +1160,6 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 					else if(isaFile[isaMnemonicPos] == '~')
 					{
 						isaMnemonicPos += 2;
-						//cout << "64-bit relative value expected, char at source file = " << loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] << endl;
 						// Value in source file is a 64-bit relative value.
 						if(!validVariable()) nextLineOfIsaFile();
 						else
@@ -1216,11 +1220,32 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 			}
 			if(!errorTrue)
 			{
+				/*
 				if(passes == 0)
 				{
 					variableNames[variablesSize] = lineContent;
 					variableValues[variablesSize] = CPUAddress;
 					variablesSize++;
+				}
+				*/
+				bool existAlready = false;
+				for(int i = 0; i < variablesSize; i++)
+				{
+					if(variableNames[i] == lineContent && variablesDefinedNTimes[i] > 0)
+					{
+						existAlready = true;
+						addError(errVARIABLEALREADYDEFINED);
+						break;
+					}
+				}
+				if(!existAlready)
+				{
+					variablesDefinedNTimes[variablesPos] = 1;
+					variableNames[variablesPos] = lineContent;
+					variableValues[variablesPos] = CPUAddress;
+					variablesPos++;
+					if(passes == 0) variablesSize++;
+					possibleError = false;
 				}
 			}
 			else
@@ -1273,11 +1298,11 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		cout << endl;
-		cout << "JAssembler v0.9" << endl;
+		cout << "JAssembler v1.3" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
-		cout << "(C) 2021 - 2022 Joonas Lindberg (The Mad Scientist)" << endl;
+		cout << "(C) 2021 - 2025 Joonas Lindberg (The Mad Scientist)" << endl;
 		cout << endl;
 		cout << "Usage: jassembler instructionsetfile sourcefile targetfile" << endl;
 		free (loadedFile[currentFilePointer]);
@@ -1346,7 +1371,6 @@ int main(int argc, char **argv)
 		{
 			ReservedWords[ReservedWordsSize] = kWord;
 			ReservedWordsSize++;
-			//cout << "kWord = " << kWord << endl;
 		}
 		else
 		{
@@ -1359,7 +1383,6 @@ int main(int argc, char **argv)
 			}
 			if(!found)
 			{
-				//cout << "new kWord = " << kWord << endl;
 				ReservedWords[ReservedWordsSize] = kWord;
 				ReservedWordsSize++;
 			}
@@ -1391,13 +1414,10 @@ int main(int argc, char **argv)
 
 	}
 
-	//cout << "ReservedWordsSize = " << ReservedWordsSize << endl;
-
-
-
 	// Here we start assembling the source file into binary.
 	passes = 0;
 	assemble();
+	CPUinitialAddressSet = false;
 	passes++;
 	if(cError)
 	{
@@ -1527,11 +1547,25 @@ int main(int argc, char **argv)
 				}
 			}
 		}
+
+								cout << "Number of variable definitions: " << variablesSize << endl;
+								for(int pos = 0; pos < variablesSize; pos++) {
+									cout << variableNames[pos] << " = $" << hex << variableValues[pos] << dec << " (" << variableValues[pos] << ")" << endl;
+								}
+
+
 		free (loadedFile[currentFilePointer]);
 		free (savedFile);
 		free (isaFile);
 		return (1);
 	}
+
+								cout << "Number of variable definitions: " << variablesSize << endl;
+								for(int pos = 0; pos < variablesSize; pos++) {
+									cout << variableNames[pos] << " = $" << hex << variableValues[pos] << dec << " (" << variableValues[pos] << ")" << endl;
+								}
+
+
 	ofstream savedfile (targetFileName, ios::out|ios::binary|ios::ate);
 	if (savedfile.is_open())
 	{
