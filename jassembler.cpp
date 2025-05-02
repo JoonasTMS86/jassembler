@@ -1024,7 +1024,13 @@ void assemble()
 						{
 							sourceLineOffset[currentFilePointer] = sourceLineOffset[currentFilePointer] + 1;
 							isaMnemonicPos++;
-							while(isaFile[isaMnemonicPos] == 32) isaMnemonicPos++;
+							if( (loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] > 32 && isaFile[isaMnemonicPos] <= 32) || 
+(loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] <= 32 && isaFile[isaMnemonicPos] > 32)) {
+								nextLineOfIsaFile();
+							}
+							else {
+								while(isaFile[isaMnemonicPos] == 32) isaMnemonicPos++;
+							}
 						}
 						// Assembler directive?
 						else if(comparedChar == '.')
@@ -1298,7 +1304,7 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		cout << endl;
-		cout << "JAssembler v1.3" << endl;
+		cout << "JAssembler v1.4" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
