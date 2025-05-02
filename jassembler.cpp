@@ -1548,23 +1548,11 @@ int main(int argc, char **argv)
 			}
 		}
 
-								cout << "Number of variable definitions: " << variablesSize << endl;
-								for(int pos = 0; pos < variablesSize; pos++) {
-									cout << variableNames[pos] << " = $" << hex << variableValues[pos] << dec << " (" << variableValues[pos] << ")" << endl;
-								}
-
-
 		free (loadedFile[currentFilePointer]);
 		free (savedFile);
 		free (isaFile);
 		return (1);
 	}
-
-								cout << "Number of variable definitions: " << variablesSize << endl;
-								for(int pos = 0; pos < variablesSize; pos++) {
-									cout << variableNames[pos] << " = $" << hex << variableValues[pos] << dec << " (" << variableValues[pos] << ")" << endl;
-								}
-
 
 	ofstream savedfile (targetFileName, ios::out|ios::binary|ios::ate);
 	if (savedfile.is_open())
