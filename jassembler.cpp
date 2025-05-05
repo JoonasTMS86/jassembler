@@ -1108,6 +1108,10 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 							*/
 							isaMnemonicPos += 2;
 							sourceLineOffset[currentFilePointer] = evaluateExpression(sourceLineOffset[currentFilePointer]);
+							if(byte0 == -1 && passes > 0)
+							{
+								nextLineOfIsaFile();
+							}
 							if(byte2 != 0 || byte3 != 0 || byte4 != 0 || byte5 != 0 || byte6 != 0 || byte7 != 0)
 							{
 								invalidValueFindAlternativeInstruction = true;
@@ -1226,14 +1230,6 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 			}
 			if(!errorTrue)
 			{
-				/*
-				if(passes == 0)
-				{
-					variableNames[variablesSize] = lineContent;
-					variableValues[variablesSize] = CPUAddress;
-					variablesSize++;
-				}
-				*/
 				bool existAlready = false;
 				for(int i = 0; i < variablesSize; i++)
 				{
@@ -1304,7 +1300,7 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		cout << endl;
-		cout << "JAssembler v1.4" << endl;
+		cout << "JAssembler v1.5" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
