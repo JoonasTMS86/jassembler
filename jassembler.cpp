@@ -470,7 +470,8 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 		valueNotDefined = true;
 		nameFoundAtLine = "";
 		int pos = origPos;
-		while(loadedFile[currentFilePointer][pos] != 10 && loadedFile[currentFilePointer][pos] != 13 && loadedFile[currentFilePointer][pos] != 32 && loadedFile[currentFilePointer][pos] != ',' && loadedFile[currentFilePointer][pos] != ';' && loadedFile[currentFilePointer][pos] != '(' && loadedFile[currentFilePointer][pos] != ')')
+
+		while(loadedFile[currentFilePointer][pos] != 10 && loadedFile[currentFilePointer][pos] != 13 && loadedFile[currentFilePointer][pos] != 32 && loadedFile[currentFilePointer][pos] != ',' && loadedFile[currentFilePointer][pos] != ';' && loadedFile[currentFilePointer][pos] != '(' && loadedFile[currentFilePointer][pos] != ')' && pos < loadedSize[currentFilePointer])
 		{
 			nameFoundAtLine = nameFoundAtLine + loadedFile[currentFilePointer][pos];
 			pos++;
@@ -868,11 +869,6 @@ bool validVariable()
 	return varIsValid;
 }
 
-
-
-
-
-
 void assemble()
 {
 	for(int i = 0; i < variablesSize; i++)
@@ -982,14 +978,18 @@ void assemble()
 								isaMnemonicPos++;
 							}
 						}
+
 						isaMnemonicPos++;
 						// Instruction found?
 						int savedsourceLineOffset = sourceLineOffset[currentFilePointer];
-						while(loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 0 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 7 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 32)
+						while(loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 0 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 7 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 9 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 32)
 						{
 							sourceLineOffset[currentFilePointer] = sourceLineOffset[currentFilePointer] + 1;
 						}
-						if(loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 13 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 10 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == ';')
+
+
+
+						if(loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 13 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == 10 || loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] == ';' || sourceLineOffset[currentFilePointer] >= loadedSize[currentFilePointer])
 						{
 							// Instruction found! Now write the opcode & possible param(s) to the output file.
 							checkingSourceInstruction = false;
@@ -1136,7 +1136,10 @@ loadedFile[currentFilePointer][sourceLineOffset[currentFilePointer]] != 32)
 								}
 								isaMnemonicPos = isaPos + 78;
 							}
-							else push();
+							else
+							{
+								push();
+							}
 						}
 						else if(isaFile[isaMnemonicPos] == '"')
 						{
@@ -1300,7 +1303,7 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		cout << endl;
-		cout << "JAssembler v1.5" << endl;
+		cout << "JAssembler v1.7" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
