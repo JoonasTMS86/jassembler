@@ -506,6 +506,9 @@ int evaluateExpression(int evaluateExpressionMnemonicPos)
 			}
 		}
 	}
+	if(valueNotDefined) {
+		addError(errVALUENOTDEFINED);
+	}
 	return evaluateExpressionMnemonicPos;
 }
 
@@ -1303,7 +1306,7 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		cout << endl;
-		cout << "JAssembler v1.7" << endl;
+		cout << "JAssembler v1.8" << endl;
 		cout << "Assemble your source code into any binary format" << endl;
 		cout << "defined in the chosen instruction set." << endl;
 		cout << endl;
@@ -1552,6 +1555,7 @@ int main(int argc, char **argv)
 				}
 			}
 		}
+
 
 		free (loadedFile[currentFilePointer]);
 		free (savedFile);
